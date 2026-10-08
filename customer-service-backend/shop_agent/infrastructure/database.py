@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -24,6 +25,21 @@ async def close_db_engine():
         await engine.dispose()
 
 
+if __name__ == "__main__":
+
+    async def test():
+        await create_db_engine()
+        async with session_factory() as session:
+            result = await session.execute(text("SELECT 1"))
+            data = result.fetchall()
+            print(data)
+            print(type(data))
+            print(type(data[0]))
+        await close_db_engine()
+
+    import asyncio
+
+    asyncio.run(test())
 """
 # 1. 创建异步数据库引擎
 engine = create_async_engine(
