@@ -8,7 +8,7 @@ from dataclasses import dataclass
 class Settings:
     database_url: str = os.getenv(
         "DATABASE_URL",
-        "mysql+pymysql://atguigu:Atguigu.123@127.0.0.1:3306/commerce?charset=utf8mb4",
+        "mysql+pymysql://zhouyihe:zhouyihe.123@127.0.0.1:3306/commerce?charset=utf8mb4",
     )
     app_host: str = os.getenv("APP_HOST", "0.0.0.0")
     app_port: int = int(os.getenv("APP_PORT", "18081"))
