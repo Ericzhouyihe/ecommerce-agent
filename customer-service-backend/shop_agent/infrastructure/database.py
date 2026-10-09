@@ -13,7 +13,7 @@ session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
 # 创建数据库引擎
-async def create_db_engine():
+def create_db_engine():
     global engine, session_factory
     engine = create_async_engine(url=settings.database_url, echo=False, pool_pre_ping=True)
     session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
