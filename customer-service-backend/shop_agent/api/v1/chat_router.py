@@ -2,16 +2,16 @@ from fastapi import APIRouter
 
 from shop_agent.api.v1.scheme import (
     ChatBotMessage,
-    ChatHistoryResponse,
     ChatRequest,
     ChatResponse,
     HistoryMessage,
+    HistoryResponse,
 )
 
 router = APIRouter(prefix="/chat", tags=["智能客服"])
 
 
-@router.post("")
+@router.post("", summary="发送消息并获取回复")
 async def chat(message: ChatRequest) -> ChatResponse:
     # message.object 可能为 None，先判空
     if message.object is not None and message.object.type == "order":
@@ -32,10 +32,10 @@ async def chat(message: ChatRequest) -> ChatResponse:
     )
 
 
-@router.get("/history")
-async def chat_history(sender_id: str) -> ChatHistoryResponse:
+@router.get("/history", summary="获取聊天历史")
+async def chat_history(sender_id: str) -> HistoryResponse:
     # messages = await chat_history.get_chat_history(sender_id) TODO: 实现聊天历史查询服务
-    return ChatHistoryResponse(
+    return HistoryResponse(
         sender_id=sender_id,
         messages=[
             HistoryMessage(role="user", text="你好"),

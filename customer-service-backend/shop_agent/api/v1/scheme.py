@@ -35,6 +35,6 @@ class HistoryMessage(BaseModel):
     object: ChatObject | None = None
 
 
-class ChatHistoryResponse(BaseModel):
+class HistoryResponse(BaseModel):
     sender_id: str
     messages: list[HistoryMessage] = Field(default_factory=list)
