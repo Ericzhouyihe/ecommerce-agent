@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS `dialogue_states` (
   `sender_id` VARCHAR(255) NOT NULL COMMENT '用户唯一标识',
   `state_json` TEXT NOT NULL COMMENT '完整对话状态 JSON',
   PRIMARY KEY (`sender_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户对话状态持久化表';
