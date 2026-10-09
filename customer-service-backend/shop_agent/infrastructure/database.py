@@ -10,54 +10,38 @@ from sqlalchemy.ext.asyncio import (
 
 from shop_agent.conf.config import settings
 
-engine: AsyncEngine | None = None
-session_factory: async_sessionmaker[AsyncSession] | None = None
+engine: AsyncEngine = create_async_engine(
+    settings.database_url,
+    echo=False,
+    pool_pre_ping=True,
+)
 
-
-# 初始化数据库引擎
-def init_db() -> None:
-    global engine, session_factory
-
-    if engine is not None:
-        return
-
-    engine = create_async_engine(
-        settings.database_url,
-        echo=False,
-        pool_pre_ping=True,
-    )
-
-    session_factory = async_sessionmaker(
-        engine,
-        expire_on_commit=False,
-    )
+session_factory = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 
 # 获取数据库会话
-async def get_db() -> AsyncGenerator[AsyncSession]:
-    if session_factory is None:
-        raise RuntimeError("Database has not been initialized")
-
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with session_factory() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
 
 
 # 关闭数据库引擎
 async def close_db() -> None:
-    global engine, session_factory
-
-    if engine is not None:
-        await engine.dispose()
-
-    engine = None
-    session_factory = None
+    await engine.dispose()
 
 
 if __name__ == "__main__":
 
     async def test():
-        init_db()
-        async with session_factory() as session:
+        async for session in get_db():
             result = await session.execute(text("SELECT 1"))
             data = result.fetchall()
             print(data)
