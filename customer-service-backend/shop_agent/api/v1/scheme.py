@@ -3,36 +3,36 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
-class ChatObjectRequest(BaseModel):
+class ChatObject(BaseModel):
     type: str
     id: str
-    title: str
+    title: str | None = None
     attributes: dict[str, Any] = Field(default_factory=dict)
 
 
-class ChatRequest(BaseModel):  # 请求
+class ChatRequest(BaseModel):
     sender_id: str
-    text: str
-    message_id: str
-    object: ChatObjectRequest | None = None
+    text: str | None = None
+    message_id: str | None = None
+    object: ChatObject | None = None
 
 
-class ReplyMessage(BaseModel):  # ★ 单条回复
-    text: str
-    object: ChatObjectRequest | None = None
+class ChatBotMessage(BaseModel):
+    text: str | None = None
+    object: ChatObject | None = None
 
 
-class ChatResponse(BaseModel):  # ★ 整体响应
+class ChatResponse(BaseModel):
     sender_id: str
     message_id: str
-    messages: list[ReplyMessage] = Field(default_factory=list)
+    messages: list[ChatBotMessage] = Field(default_factory=list)
 
 
 # """历史消息条目：用户和机器人的消息混在同一个列表里，靠 role 区分"""
 class HistoryMessage(BaseModel):
-    role: Literal["user", "bot"]  # 只允许这两个值
-    text: str | None = None  # 文档标注 可空
-    object: ChatObjectRequest | None = None
+    role: Literal["user", "bot"]
+    text: str | None = None
+    object: ChatObject | None = None
 
 
 class ChatHistoryResponse(BaseModel):

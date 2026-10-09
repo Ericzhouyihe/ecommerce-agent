@@ -1,6 +1,12 @@
 from fastapi import APIRouter
 
-from shop_agent.api.v1.scheme import ChatRequest, ChatResponse, ReplyMessage
+from shop_agent.api.v1.scheme import (
+    ChatBotMessage,
+    ChatHistoryResponse,
+    ChatRequest,
+    ChatResponse,
+    HistoryMessage,
+)
 
 router = APIRouter(prefix="/chat", tags=["智能客服"])
 
@@ -15,12 +21,24 @@ async def chat(message: ChatRequest) -> ChatResponse:
         return ChatResponse(
             sender_id=message.sender_id,
             message_id=message.message_id,
-            messages=[ReplyMessage(text=f"订单 {order_id} 的状态是 ")],  # {order.status}
+            messages=[ChatBotMessage(text=f"订单 {order_id} 的状态是 ")],  # {order.status}
         )
 
     # 分支二：纯文本、没有订单上下文 → 引导用户补充信息
     return ChatResponse(
         sender_id=message.sender_id,
         message_id=message.message_id,
-        messages=[ReplyMessage(text="请告诉我你的订单号。")],
+        messages=[ChatBotMessage(text="请告诉我你的订单号。")],
+    )
+
+
+@router.get("/history")
+async def chat_history(sender_id: str) -> ChatHistoryResponse:
+    # messages = await chat_history.get_chat_history(sender_id) TODO: 实现聊天历史查询服务
+    return ChatHistoryResponse(
+        sender_id=sender_id,
+        messages=[
+            HistoryMessage(role="user", text="你好"),
+            HistoryMessage(role="bot", text="你好！有什么我可以帮助你的吗？"),
+        ],
     )
