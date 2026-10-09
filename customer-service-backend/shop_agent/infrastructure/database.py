@@ -1,3 +1,5 @@
+from collections.abc import AsyncGenerator
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -12,30 +14,56 @@ engine: AsyncEngine | None = None
 session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
-# 创建数据库引擎
-def create_db_engine():
+# 初始化数据库引擎
+def init_db() -> None:
     global engine, session_factory
-    engine = create_async_engine(url=settings.database_url, echo=False, pool_pre_ping=True)
-    session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+
+    if engine is not None:
+        return
+
+    engine = create_async_engine(
+        settings.database_url,
+        echo=False,
+        pool_pre_ping=True,
+    )
+
+    session_factory = async_sessionmaker(
+        engine,
+        expire_on_commit=False,
+    )
+
+
+# 获取数据库会话
+async def get_db() -> AsyncGenerator[AsyncSession]:
+    if session_factory is None:
+        raise RuntimeError("Database has not been initialized")
+
+    async with session_factory() as session:
+        yield session
 
 
 # 关闭数据库引擎
-async def close_db_engine():
+async def close_db() -> None:
+    global engine, session_factory
+
     if engine is not None:
         await engine.dispose()
+
+    engine = None
+    session_factory = None
 
 
 if __name__ == "__main__":
 
     async def test():
-        create_db_engine()
+        init_db()
         async with session_factory() as session:
             result = await session.execute(text("SELECT 1"))
             data = result.fetchall()
             print(data)
             print(type(data))
             print(type(data[0]))
-        await close_db_engine()
+        await close_db()
 
     import asyncio
 
