@@ -28,7 +28,7 @@ async def close_db_engine():
 if __name__ == "__main__":
 
     async def test():
-        await create_db_engine()
+        create_db_engine()
         async with session_factory() as session:
             result = await session.execute(text("SELECT 1"))
             data = result.fetchall()
