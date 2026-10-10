@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter
 
 from shop_agent.api.v1.scheme import (
@@ -13,6 +15,9 @@ router = APIRouter(prefix="/chat", tags=["智能客服"])
 
 @router.post("", summary="发送消息并获取回复")
 async def chat(message: ChatRequest) -> ChatResponse:
+    # 文档约定:客户端不传 message_id 时,服务端自动生成
+    reply_message_id = message.message_id or f"msg_{uuid.uuid4().hex[:12]}"
+
     # message.object 可能为 None，先判空
     if message.object is not None and message.object.type == "order":
         order_id = message.object.id  # "ORDER_10001"
@@ -20,14 +25,14 @@ async def chat(message: ChatRequest) -> ChatResponse:
         # order = await order_service.get_order(order_id) TODO: 实现订单查询服务
         return ChatResponse(
             sender_id=message.sender_id,
-            message_id=message.message_id,
+            message_id=reply_message_id,
             messages=[ChatBotMessage(text=f"订单 {order_id} 的状态是 ")],  # {order.status}
         )
 
     # 分支二：纯文本、没有订单上下文 → 引导用户补充信息
     return ChatResponse(
         sender_id=message.sender_id,
-        message_id=message.message_id,
+        message_id=reply_message_id,
         messages=[ChatBotMessage(text="请告诉我你的订单号。")],
     )
 

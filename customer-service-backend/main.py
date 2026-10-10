@@ -1,8 +1,10 @@
 import uvicorn
 
+from shop_agent.conf.config import settings
+
 
 def main():
-    uvicorn.run("sh.api.app:app", host="0.0.0.0", port=8000)
+    uvicorn.run("shop_agent.app:app", host=settings.app_host, port=settings.app_port)
 
 
 if __name__ == "__main__":
