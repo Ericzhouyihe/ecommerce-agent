@@ -1,5 +1,5 @@
 from shop_agent.api.v1.scheme import ChatMessage
-from shop_agent.domain.message import Message, OrderRef
+from shop_agent.domain.dialogue.message import Message, OrderRef
 
 
 class ChatService:
