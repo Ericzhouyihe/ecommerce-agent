@@ -1,49 +1,29 @@
-import uuid
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from shop_agent.api.dependencies import get_chat_service
 from shop_agent.api.v1.scheme import (
-    ChatBotMessage,
     ChatRequest,
     ChatResponse,
-    HistoryMessage,
     HistoryResponse,
 )
+from shop_agent.application.dialogue_service import DialogueService
 
 router = APIRouter(prefix="/chat", tags=["智能客服"])
 
 
 @router.post("", summary="发送消息并获取回复")
-async def chat(message: ChatRequest) -> ChatResponse:
-    # 文档约定:客户端不传 message_id 时,服务端自动生成
-    reply_message_id = message.message_id or f"msg_{uuid.uuid4().hex[:12]}"
-
-    # message.object 可能为 None，先判空
-    if message.object is not None and message.object.type == "order":
-        order_id = message.object.id  # "ORDER_10001"
-        # source = message.object.attributes.get("source")  # "order_list"\
-        # order = await order_service.get_order(order_id) TODO: 实现订单查询服务
-        return ChatResponse(
-            sender_id=message.sender_id,
-            message_id=reply_message_id,
-            messages=[ChatBotMessage(text=f"订单 {order_id} 的状态是 ")],  # {order.status}
-        )
-
-    # 分支二：纯文本、没有订单上下文 → 引导用户补充信息
-    return ChatResponse(
-        sender_id=message.sender_id,
-        message_id=reply_message_id,
-        messages=[ChatBotMessage(text="请告诉我你的订单号。")],
-    )
+async def chat(
+    message: ChatRequest,
+    service: Annotated[DialogueService, Depends(get_chat_service)],
+) -> ChatResponse:
+    return await service.handle(message)
 
 
 @router.get("/history", summary="获取聊天历史")
-async def chat_history(sender_id: str) -> HistoryResponse:
-    # messages = await chat_history.get_chat_history(sender_id) TODO: 实现聊天历史查询服务
-    return HistoryResponse(
-        sender_id=sender_id,
-        messages=[
-            HistoryMessage(role="user", text="你好"),
-            HistoryMessage(role="bot", text="你好！有什么我可以帮助你的吗？"),
-        ],
-    )
+async def chat_history(
+    sender_id: str,
+    service: Annotated[DialogueService, Depends(get_chat_service)],
+) -> HistoryResponse:
+    return await service.get_history(sender_id)

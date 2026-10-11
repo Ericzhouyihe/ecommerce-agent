@@ -5,10 +5,10 @@ from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shop_agent.domain.dialogue.state import DialogueState
-from shop_agent.infrastructure.db.models.dialogue_state import DialogueStateORM
+from shop_agent.infrastructure.db.models import DialogueStateORM
 
 
-class DialogueStateRepo:
+class DialogueStateRepository:
     """以 sender_id 为键,对对话状态做增删查改"""
 
     def __init__(self, db: AsyncSession):
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         from shop_agent.infrastructure.db.database import close_db, session_factory
 
         async with session_factory() as db:
-            repo = DialogueStateRepo(db)
+            repo = DialogueStateRepository(db)
 
             # 增:带一个 pending_turn,验证它不会被持久化
             state = DialogueState(

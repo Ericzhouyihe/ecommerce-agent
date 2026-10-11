@@ -12,8 +12,8 @@ class ChatObject(BaseModel):
 
 class ChatRequest(BaseModel):
     sender_id: str
-    text: str | None = None
     message_id: str | None = None
+    text: str | None = None
     object: ChatObject | None = None
 
 
