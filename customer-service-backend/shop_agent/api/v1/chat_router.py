@@ -3,12 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from shop_agent.api.dependencies import get_chat_service
+from shop_agent.api.v1.mappers import build_chat_response, build_user_message
 from shop_agent.api.v1.scheme import (
     ChatRequest,
     ChatResponse,
     HistoryResponse,
 )
-from shop_agent.application.chat_mapper import build_chat_response, build_user_message
 from shop_agent.application.dialogue_service import DialogueService
 from shop_agent.domain.dialogue.message import ProcessResult
 
