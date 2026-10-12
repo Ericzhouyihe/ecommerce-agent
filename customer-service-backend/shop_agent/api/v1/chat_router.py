@@ -8,7 +8,9 @@ from shop_agent.api.v1.scheme import (
     ChatResponse,
     HistoryResponse,
 )
+from shop_agent.application.chat_mapper import build_chat_response, build_user_message
 from shop_agent.application.dialogue_service import DialogueService
+from shop_agent.domain.dialogue.message import ProcessResult
 
 router = APIRouter(prefix="/chat", tags=["智能客服"])
 
@@ -16,9 +18,12 @@ router = APIRouter(prefix="/chat", tags=["智能客服"])
 @router.post("", summary="发送消息并获取回复")
 async def chat(
     message: ChatRequest,
-    service: Annotated[DialogueService, Depends(get_chat_service)],
+    dialogue_service: Annotated[DialogueService, Depends(get_chat_service)],
 ) -> ChatResponse:
-    return await service.handle(message)
+
+    process_result: ProcessResult = dialogue_service.process_message(build_user_message(message))
+
+    return build_chat_response(process_result)
 
 
 @router.get("/history", summary="获取聊天历史")
