@@ -9,6 +9,7 @@ class MessageType(Enum):
 
 @dataclass
 class MessageObject:
+    # FocusedObject
     type: str
     id: str
     title: str | None = None
@@ -35,9 +36,3 @@ class ProcessResult:
     sender_id: str
     message_id: str
     messages: list[BotMessage]
-
-
-@dataclass
-class HistoryEntry:
-    role: str
-    text: str | None = None

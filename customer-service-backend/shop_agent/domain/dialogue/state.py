@@ -2,24 +2,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from shop_agent.domain.dialogue.contexts import SystemContext, TaskContext
+from shop_agent.domain.dialogue.messages import MessageObject
+from shop_agent.domain.dialogue.sessions import Turn
+
 
 @dataclass
 class DialogueState:
-    """与某位用户的完整对话上下文,以 sender_id 为键持久化"""
-
     sender_id: str
-    # 1. 用户任务上下文
-    active_task: dict | None = None  # {flow_id, step_id, slots}
-    paused_tasks: list[dict] = field(default_factory=list)
-    # 2. 系统任务上下文(含 __type__ 标记的子类字典)
-    active_system_flow: dict | None = None
-    # 3. 聚焦对象
-    focused_object: dict | None = None  # {type, id, title, attributes}
-    # 4. 会话历史
+    active_task: TaskContext | None = None
+    paused_tasks: list[TaskContext] = field(default_factory=list)
+    active_system_flow: SystemContext | None = None
+    focused_object: MessageObject | None = None
     sessions: list[dict] = field(default_factory=list)
     current_session_id: str | None = None
-    # 5. 处理中的轮次(瞬态,不落盘)
-    pending_turn: dict | None = None
+    pending_turn: Turn | None = None
 
     def to_dict(self) -> dict:
         """序列化为可 JSON 持久化的 dict;剔除瞬态字段"""

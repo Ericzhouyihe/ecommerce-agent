@@ -1,4 +1,4 @@
-from shop_agent.domain.dialogue.message import ProcessResult, UserMessage
+from shop_agent.domain.dialogue.messages import ProcessResult, UserMessage
 from shop_agent.domain.dialogue.state import DialogueState
 
 

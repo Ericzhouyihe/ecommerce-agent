@@ -6,7 +6,7 @@ from shop_agent.api.v1.scheme import (
     ChatRequest,
     ChatResponse,
 )
-from shop_agent.domain.dialogue.message import (
+from shop_agent.domain.dialogue.messages import (
     MessageObject,
     MessageType,
     ProcessResult,

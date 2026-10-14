@@ -10,7 +10,7 @@ from shop_agent.api.v1.scheme import (
     HistoryResponse,
 )
 from shop_agent.application.dialogue_service import DialogueService
-from shop_agent.domain.dialogue.message import ProcessResult
+from shop_agent.domain.dialogue.messages import ProcessResult
 
 router = APIRouter(prefix="/chat", tags=["智能客服"])
 
