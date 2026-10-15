@@ -15,7 +15,7 @@ class DialogueStateRepository(ABC):
         """
 
     @abstractmethod
-    async def save_state(self, sender_id: str, state: DialogueState) -> None:
+    async def save_state(self, state: DialogueState) -> None:
         """保存整个聚合;存在则整体覆盖。
 
         契约:调用方不区分"新建还是更新"(upsert 语义)。

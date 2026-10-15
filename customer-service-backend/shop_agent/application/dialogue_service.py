@@ -23,7 +23,7 @@ class DialogueService:
         )
 
         # 3. 通过 dialogue_state_repository 保存最新的对话状态
-        await self.dialogue_state_repository.save_state(user_message.sender_id, dialogue_state)
+        await self.dialogue_state_repository.save_state(dialogue_state)
 
         # 4. 返回本轮处理结果
         return process_result

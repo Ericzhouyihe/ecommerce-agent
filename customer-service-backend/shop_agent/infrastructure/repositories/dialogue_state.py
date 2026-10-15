@@ -9,7 +9,7 @@ from shop_agent.domain.dialogue.state import DialogueState
 from shop_agent.infrastructure.db.models import DialogueStateORM
 
 
-class MySQLDialogueStateRepository(DialogueStateRepository):    
+class MySQLDialogueStateRepository(DialogueStateRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -21,7 +21,7 @@ class MySQLDialogueStateRepository(DialogueStateRepository):
             return DialogueState(sender_id=sender_id)  # 契约:新用户返回全新状态
         return DialogueState.from_dict(json.loads(orm.state_json))
 
-    async def save_state(self, sender_id: str, state: DialogueState) -> None:
+    async def save_state(self, state: DialogueState) -> None:
         stmt = mysql_insert(DialogueStateORM).values(
             sender_id=state.sender_id,
             state_json=json.dumps(state.to_dict(), ensure_ascii=False),
