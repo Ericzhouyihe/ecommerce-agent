@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from shop_agent.domain.dialogue.contexts import SystemContext, TaskContext
@@ -22,24 +20,35 @@ class DialogueState:
         """序列化为可 JSON 持久化的 dict;剔除瞬态字段"""
         return {
             "sender_id": self.sender_id,
-            "active_task": self.active_task,
-            "paused_tasks": self.paused_tasks,
-            "active_system_flow": self.active_system_flow,
-            "focused_object": self.focused_object,
-            "sessions": self.sessions,
+            "active_task": self.active_task.to_dict() if self.active_task else None,
+            "paused_tasks": [task.to_dict() for task in self.paused_tasks],
+            "active_system_flow": self.active_system_flow.to_dict()
+            if self.active_system_flow
+            else None,
+            "focused_object": self.focused_object.to_dict() if self.focused_object else None,
+            "sessions": [session.to_dict() for session in self.sessions],
             "current_session_id": self.current_session_id,
-            # pending_turn 故意不导出:两步提交,未完成的轮次不落盘
+            "pending_turn": self.pending_turn.to_dict() if self.pending_turn else None,
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> DialogueState:
+    def from_dict(cls, data: dict) -> "DialogueState":
         """从持久化 JSON 重建;忽略未知键,兼容结构演进"""
         return cls(
             sender_id=data["sender_id"],
-            active_task=data.get("active_task"),
-            paused_tasks=data.get("paused_tasks", []),
-            active_system_flow=data.get("active_system_flow"),
-            focused_object=data.get("focused_object"),
-            sessions=data.get("sessions", []),
+            active_task=TaskContext.from_dict(data.get("active_task"))
+            if data.get("active_task")
+            else None,
+            paused_tasks=[TaskContext.from_dict(task) for task in data.get("paused_tasks", [])],
+            active_system_flow=SystemContext.from_dict(data.get("active_system_flow"))
+            if data.get("active_system_flow")
+            else None,
+            focused_object=MessageObject.from_dict(data.get("focused_object"))
+            if data.get("focused_object")
+            else None,
+            sessions=[Turn.from_dict(session) for session in data.get("sessions", [])],
             current_session_id=data.get("current_session_id"),
+            pending_turn=Turn.from_dict(data.get("pending_turn"))
+            if data.get("pending_turn")
+            else None,
         )

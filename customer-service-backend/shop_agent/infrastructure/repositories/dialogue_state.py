@@ -29,3 +29,19 @@ class MySQLDialogueStateRepository(DialogueStateRepository):
         stmt = stmt.on_duplicate_key_update(state_json=stmt.inserted.state_json)
         await self.session.execute(stmt)
         await self.session.commit()
+
+
+if __name__ == "__main__":
+    async def test():
+        from shop_agent.infrastructure.db.database import get_db
+
+        session = get_db()
+        repo = MySQLDialogueStateRepository(session)
+        state = await repo.load_state("123")
+        print(state)
+        await repo.save_state(state)
+        print(state)
+
+    import asyncio
+
+    asyncio.run(test())
