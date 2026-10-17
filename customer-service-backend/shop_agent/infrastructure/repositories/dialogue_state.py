@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shop_agent.domain.dialogue.contexts import TaskContext
 from shop_agent.domain.dialogue.repository import DialogueStateRepository
 from shop_agent.domain.dialogue.state import DialogueState
 from shop_agent.infrastructure.db.models import DialogueStateORM
@@ -32,15 +33,25 @@ class MySQLDialogueStateRepository(DialogueStateRepository):
 
 
 if __name__ == "__main__":
-    async def test():
-        from shop_agent.infrastructure.db.database import get_db
 
-        session = get_db()
-        repo = MySQLDialogueStateRepository(session)
-        state = await repo.load_state("123")
-        print(state)
-        await repo.save_state(state)
-        print(state)
+    async def test():
+        from shop_agent.infrastructure.db.database import engine, session_factory
+
+        async with session_factory() as session:
+            repo = MySQLDialogueStateRepository(session)
+            state = DialogueState(
+                sender_id="test_sender",
+                active_task=TaskContext(
+                    flow_id="flow_1",
+                    step_id="step_1",
+                    slots={"order_id", "order_1"},
+                ),
+            )
+            await repo.save_state(state)
+            state = await repo.load_state("test_sender")
+            print(state)
+
+        await engine.dispose()
 
     import asyncio
 
