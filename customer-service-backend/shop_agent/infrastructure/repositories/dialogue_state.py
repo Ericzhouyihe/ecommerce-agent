@@ -19,7 +19,7 @@ class MySQLDialogueStateRepository(DialogueStateRepository):
         result = await self.session.execute(stmt)
         orm = result.scalar_one_or_none()
         if orm is None:
-            return DialogueState(sender_id=sender_id)  # 契约:新用户返回全新状态
+            return DialogueState(sender_id=sender_id)
         return DialogueState.from_dict(json.loads(orm.state_json))
 
     async def save_state(self, state: DialogueState) -> None:
@@ -35,23 +35,24 @@ class MySQLDialogueStateRepository(DialogueStateRepository):
 if __name__ == "__main__":
 
     async def test():
-        from shop_agent.infrastructure.db.database import engine, session_factory
+        from shop_agent.infrastructure.db.database import close_db, session_factory
 
-        async with session_factory() as session:
-            repo = MySQLDialogueStateRepository(session)
-            state = DialogueState(
-                sender_id="test_sender",
-                active_task=TaskContext(
-                    flow_id="flow_1",
-                    step_id="step_1",
-                    slots={"order_id", "order_1"},
-                ),
-            )
-            await repo.save_state(state)
-            state = await repo.load_state("test_sender")
-            print(state)
-
-        await engine.dispose()
+        try:
+            async with session_factory() as session:
+                repo = MySQLDialogueStateRepository(session)
+                state = DialogueState(
+                    sender_id="test_sender",
+                    active_task=TaskContext(
+                        flow_id="flow_1",
+                        step_id="step_1",
+                        slots={"order_id": "order_1"},
+                    ),
+                )
+                await repo.save_state(state)
+                state = await repo.load_state("test_sender")
+                print(state)
+        finally:
+            await close_db()
 
     import asyncio
 
