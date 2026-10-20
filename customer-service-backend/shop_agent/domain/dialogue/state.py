@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from shop_agent.domain.dialogue.contexts import SystemContext, TaskContext
 from shop_agent.domain.dialogue.messages import MessageObject
-from shop_agent.domain.dialogue.sessions import Turn
+from shop_agent.domain.dialogue.sessions import Session, Turn
 
 
 @dataclass
@@ -12,7 +12,7 @@ class DialogueState:
     paused_tasks: list[TaskContext] = field(default_factory=list)
     active_system_flow: SystemContext | None = None
     focused_object: MessageObject | None = None
-    sessions: list[dict] = field(default_factory=list)
+    sessions: list[Session] = field(default_factory=list)
     current_session_id: str | None = None
     pending_turn: Turn | None = None
 
@@ -28,7 +28,7 @@ class DialogueState:
             "focused_object": self.focused_object.to_dict() if self.focused_object else None,
             "sessions": [session.to_dict() for session in self.sessions],
             "current_session_id": self.current_session_id,
-            "pending_turn": self.pending_turn.to_dict() if self.pending_turn else None,
+            # "pending_turn": 不持久化,因为是瞬态字段
         }
 
     @classmethod
@@ -36,9 +36,7 @@ class DialogueState:
         """从持久化 JSON 重建;忽略未知键,兼容结构演进"""
         return cls(
             sender_id=data["sender_id"],
-            active_task=TaskContext.from_dict(data.get("active_task"))
-            if data.get("active_task")
-            else None,
+            active_task=TaskContext.from_dict(data["active_task"]) if data["active_task"] else None,
             paused_tasks=[TaskContext.from_dict(task) for task in data.get("paused_tasks", [])],
             active_system_flow=SystemContext.from_dict(data.get("active_system_flow"))
             if data.get("active_system_flow")
@@ -46,9 +44,6 @@ class DialogueState:
             focused_object=MessageObject.from_dict(data.get("focused_object"))
             if data.get("focused_object")
             else None,
-            sessions=[Turn.from_dict(session) for session in data.get("sessions", [])],
+            sessions=[Session.from_dict(session) for session in data.get("sessions", [])],
             current_session_id=data.get("current_session_id"),
-            pending_turn=Turn.from_dict(data.get("pending_turn"))
-            if data.get("pending_turn")
-            else None,
         )

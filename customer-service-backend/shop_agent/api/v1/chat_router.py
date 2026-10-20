@@ -21,7 +21,9 @@ async def chat(
     dialogue_service: Annotated[DialogueService, Depends(get_chat_service)],
 ) -> ChatResponse:
 
-    process_result: ProcessResult = dialogue_service.process_message(build_user_message(message))
+    process_result: ProcessResult = await dialogue_service.process_message(
+        build_user_message(message)
+    )
 
     return build_chat_response(process_result)
 

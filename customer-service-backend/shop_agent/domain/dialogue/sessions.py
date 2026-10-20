@@ -54,3 +54,16 @@ class Session:
             closed_at=data.get("closed_at"),
             turns=[Turn.from_dict(turn) for turn in data["turns"]],
         )
+
+
+import time
+import uuid
+
+
+def new_session() -> Session:
+    now = time.time()
+    return Session(
+        session_id=str(uuid.uuid4()),
+        started_at=now,
+        last_activity_at=now,
+    )
