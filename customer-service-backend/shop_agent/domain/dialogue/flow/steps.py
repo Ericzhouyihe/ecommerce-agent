@@ -24,8 +24,8 @@ class ResponseDefinition:
     def from_json(cls, data: dict[str, Any]) -> "ResponseDefinition":
         return cls(
             mode=str(data.get("mode", "static")),
-            text=None if data.get("text") is None else str(data["text"]),
-            prompt=None if data.get("prompt") is None else str(data["prompt"]),
+            text=data.get("text"),
+            prompt=data.get("prompt"),
         )
 
 
@@ -33,6 +33,14 @@ class ResponseDefinition:
 class SlotValidation:
     condition: str | None = None
     failure_response: ResponseDefinition | None = None
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "SlotValidation":
+        raw_failure = data.get("failure_response")
+        return cls(
+            condition=data.get("condition"),
+            failure_response=ResponseDefinition.from_json(raw_failure) if raw_failure else None,
+        )
 
 
 @dataclass(slots=True)
@@ -42,14 +50,16 @@ class FlowStep:
     next: list[FlowStepLink] = field(default_factory=list)
     description: str = ""
 
+    @classmethod
+    def from_dict(cls, step_data: dict[str, Any]) -> "FlowStep":
+        step_type = step_data["type"]
+        clz = STEP_TYPE_TO_CLASS[step_type]
+        return cls(**load_base_step_fields(step_data))
+
 
 @dataclass(slots=True)
 class StartFlowStep(FlowStep):
-    type: FlowStepType = FlowStepType.START
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "StartFlowStep":
-        return cls(**load_base_step_fields(data))
+    pass
 
 
 @dataclass(slots=True)
@@ -60,14 +70,11 @@ class ActionFlowStep(FlowStep):
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "ActionFlowStep":
-        raw_args = data.get("args")
-        if isinstance(raw_args, str):
-            args: dict[str, Any] | str = raw_args
-        elif isinstance(raw_args, dict):
-            args = raw_args
-        else:
-            args = {}
-        return cls(action=str(data["action"]), args=args, **load_base_step_fields(data))
+        return cls(
+            **load_base_step_fields(data),
+            action=str(data.get("action", "")),
+            args=data.get("args", {}),
+        )
 
 
 @dataclass(slots=True)
@@ -79,31 +86,13 @@ class CollectSlotStep(FlowStep):
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "CollectSlotStep":
-        raw_rule = data.get("validation")
-        validation = (
-            SlotValidation(
-                condition=(
-                    None if raw_rule.get("condition") is None else str(raw_rule["condition"])
-                ),
-                failure_response=(
-                    ResponseDefinition.from_json(raw_rule["failure_response"])
-                    if isinstance(raw_rule.get("failure_response"), dict)
-                    else None
-                ),
-            )
-            if raw_rule is not None
-            else None
-        )
-        raw_response = data.get("response")
-        if isinstance(raw_response, dict):
-            response = ResponseDefinition.from_json(raw_response)
-        else:
-            response = ResponseDefinition(text=str(data.get("prompt", "")))
+        raw_response = data.get("response") or {}
+        raw_validation = data.get("validation")
         return cls(
-            slot_name=str(data["slot_name"]),
-            response=response,
-            validation=validation,
             **load_base_step_fields(data),
+            slot_name=str(data.get("slot_name", "")),
+            response=ResponseDefinition.from_json(raw_response),
+            validation=SlotValidation.from_json(raw_validation) if raw_validation else None,
         )
 
 
@@ -114,20 +103,15 @@ class SetSlotsFlowStep(FlowStep):
 
     @classmethod
     def from_json(cls, data: dict[str, Any]) -> "SetSlotsFlowStep":
-        normalized_slots = [
-            {"key": str(slot_item["name"]), "value": slot_item["value"]}
-            for slot_item in data.get("set_slots", [])
-        ]
-        return cls(slots=normalized_slots, **load_base_step_fields(data))
+        return cls(
+            **load_base_step_fields(data),
+            slots=list(data.get("slots") or []),
+        )
 
 
 @dataclass(slots=True)
 class EndFlowStep(FlowStep):
-    type: FlowStepType = FlowStepType.END
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "EndFlowStep":
-        return cls(**load_base_step_fields(data))
+    pass
 
 
 def step_from_json(data: dict[str, Any]) -> FlowStep:
