@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 
-from shop_agent.domain.dialogue.contexts import SystemContext, TaskContext
+from shop_agent.domain.dialogue.contexts import SystemContext
 from shop_agent.domain.dialogue.messages import MessageObject
 from shop_agent.domain.dialogue.sessions import Session, Turn
+from shop_agent.domain.task.contexts import TaskContext
 
 
 @dataclass

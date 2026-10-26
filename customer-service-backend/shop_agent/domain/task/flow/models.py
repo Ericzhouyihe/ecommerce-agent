@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
-from shop_agent.domain.dialogue.flow.steps import CollectSlotStep, FlowStep, StartFlowStep
+from shop_agent.domain.task.flow.steps import CollectSlotStep, FlowStep, StartFlowStep
 
 
 @dataclass(slots=True)

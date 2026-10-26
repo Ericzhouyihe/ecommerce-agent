@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from shop_agent.domain.dialogue.flow.links import FlowStepLink, StaticLink, link_from_json
+from shop_agent.domain.task.flow.links import FlowStepLink, StaticLink, link_from_json
 
 
 class FlowStepType(str, Enum):
@@ -24,8 +24,8 @@ class ResponseDefinition:
     def from_json(cls, data: dict[str, Any]) -> "ResponseDefinition":
         return cls(
             mode=str(data.get("mode", "static")),
-            text=data.get("text"),
-            prompt=data.get("prompt"),
+            text=None if data.get("text") is None else str(data["text"]),
+            prompt=None if data.get("prompt") is None else str(data["prompt"]),
         )
 
 
@@ -34,14 +34,6 @@ class SlotValidation:
     condition: str | None = None
     failure_response: ResponseDefinition | None = None
 
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "SlotValidation":
-        raw_failure = data.get("failure_response")
-        return cls(
-            condition=data.get("condition"),
-            failure_response=ResponseDefinition.from_json(raw_failure) if raw_failure else None,
-        )
-
 
 @dataclass(slots=True)
 class FlowStep:
@@ -49,12 +41,6 @@ class FlowStep:
     type: FlowStepType
     next: list[FlowStepLink] = field(default_factory=list)
     description: str = ""
-
-    @classmethod
-    def from_dict(cls, step_data: dict[str, Any]) -> "FlowStep":
-        step_type = step_data["type"]
-        clz = STEP_TYPE_TO_CLASS[step_type]
-        return clz.from_dict(step_data)
 
     @staticmethod
     def base_fields(step_data: dict[str, Any]) -> dict[str, Any]:
@@ -97,13 +83,20 @@ class CollectSlotStep(FlowStep):
 
     @classmethod
     def from_dict(cls, step_data: dict[str, Any]) -> "CollectSlotStep":
-        raw_response = step_data.get("response") or {}
-        raw_validation = step_data.get("validation")
         return cls(
             **cls.base_fields(step_data),
             slot_name=str(step_data.get("slot_name", "")),
-            response=ResponseDefinition.from_json(raw_response),
-            validation=SlotValidation.from_json(raw_validation) if raw_validation else None,
+            response=ResponseDefinition(**(step_data.get("response") or {})),
+            validation=(
+                SlotValidation(
+                    condition=step_data.get("validation").get("condition"),
+                    failure_response=ResponseDefinition(
+                        **(step_data.get("validation").get("failure_response") or {})
+                    ),
+                )
+                if "validation" in step_data
+                else None
+            ),
         )
 
 
@@ -133,22 +126,12 @@ def step_from_json(step_data: dict[str, Any]) -> FlowStep:
     return parser(step_data)
 
 
-def load_base_step_fields(step_data: dict[str, Any]) -> dict[str, Any]:
-    step_type = FlowStepType(step_data["type"])
-    return {
-        "id": str(step_data["id"]),
-        "type": step_type,
-        "next": load_next_links(raw_next=step_data.get("next")),
-        "description": str(step_data.get("description", "")),
-    }
-
-
 STEP_TYPE_TO_CLASS: dict[FlowStepType, Callable[[dict[str, Any]], FlowStep]] = {
-    FlowStepType.START: StartFlowStep.from_json,
-    FlowStepType.ACTION: ActionFlowStep.from_json,
-    FlowStepType.COLLECT: CollectSlotStep.from_json,
-    FlowStepType.SET_SLOTS: SetSlotsFlowStep.from_json,
-    FlowStepType.END: EndFlowStep.from_json,
+    FlowStepType.START: StartFlowStep.from_dict,
+    FlowStepType.ACTION: ActionFlowStep.from_dict,
+    FlowStepType.COLLECT: CollectSlotStep.from_dict,
+    FlowStepType.SET_SLOTS: SetSlotsFlowStep.from_dict,
+    FlowStepType.END: EndFlowStep.from_dict,
 }
 
 
