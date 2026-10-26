@@ -54,12 +54,23 @@ class FlowStep:
     def from_dict(cls, step_data: dict[str, Any]) -> "FlowStep":
         step_type = step_data["type"]
         clz = STEP_TYPE_TO_CLASS[step_type]
-        return cls(**load_base_step_fields(step_data))
+        return clz.from_dict(step_data)
+
+    @staticmethod
+    def base_fields(step_data: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "id": step_data["id"],
+            "type": FlowStepType(step_data["type"]),
+            "next": load_next_links(raw_next=step_data.get("next")),
+            "description": step_data.get("description", ""),
+        }
 
 
 @dataclass(slots=True)
 class StartFlowStep(FlowStep):
-    pass
+    @classmethod
+    def from_dict(cls, step_data: dict[str, Any]) -> "StartFlowStep":
+        return cls(**cls.base_fields(step_data))
 
 
 @dataclass(slots=True)
@@ -69,11 +80,11 @@ class ActionFlowStep(FlowStep):
     args: dict[str, Any] | str = field(default_factory=dict)
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "ActionFlowStep":
+    def from_dict(cls, step_data: dict[str, Any]) -> "ActionFlowStep":
         return cls(
-            **load_base_step_fields(data),
-            action=str(data.get("action", "")),
-            args=data.get("args", {}),
+            **cls.base_fields(step_data),
+            action=str(step_data.get("action", "")),
+            args=step_data.get("args", {}),
         )
 
 
@@ -85,12 +96,12 @@ class CollectSlotStep(FlowStep):
     validation: SlotValidation | None = None
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "CollectSlotStep":
-        raw_response = data.get("response") or {}
-        raw_validation = data.get("validation")
+    def from_dict(cls, step_data: dict[str, Any]) -> "CollectSlotStep":
+        raw_response = step_data.get("response") or {}
+        raw_validation = step_data.get("validation")
         return cls(
-            **load_base_step_fields(data),
-            slot_name=str(data.get("slot_name", "")),
+            **cls.base_fields(step_data),
+            slot_name=str(step_data.get("slot_name", "")),
             response=ResponseDefinition.from_json(raw_response),
             validation=SlotValidation.from_json(raw_validation) if raw_validation else None,
         )
@@ -102,31 +113,33 @@ class SetSlotsFlowStep(FlowStep):
     slots: list[dict[str, Any]] = field(default_factory=list)
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "SetSlotsFlowStep":
+    def from_dict(cls, step_data: dict[str, Any]) -> "SetSlotsFlowStep":
         return cls(
-            **load_base_step_fields(data),
-            slots=list(data.get("slots") or []),
+            **cls.base_fields(step_data),
+            slots=list(step_data.get("slots") or []),
         )
 
 
 @dataclass(slots=True)
 class EndFlowStep(FlowStep):
-    pass
+    @classmethod
+    def from_dict(cls, step_data: dict[str, Any]) -> "EndFlowStep":
+        return cls(**cls.base_fields(step_data))
 
 
-def step_from_json(data: dict[str, Any]) -> FlowStep:
-    step_type = FlowStepType(data["type"])
+def step_from_json(step_data: dict[str, Any]) -> FlowStep:
+    step_type = FlowStepType(step_data["type"])
     parser = STEP_TYPE_TO_CLASS[step_type]
-    return parser(data)
+    return parser(step_data)
 
 
-def load_base_step_fields(data: dict[str, Any]) -> dict[str, Any]:
-    step_type = FlowStepType(data["type"])
+def load_base_step_fields(step_data: dict[str, Any]) -> dict[str, Any]:
+    step_type = FlowStepType(step_data["type"])
     return {
-        "id": str(data["id"]),
+        "id": str(step_data["id"]),
         "type": step_type,
-        "next": load_next_links(raw_next=data.get("next")),
-        "description": str(data.get("description", "")),
+        "next": load_next_links(raw_next=step_data.get("next")),
+        "description": str(step_data.get("description", "")),
     }
 
 
@@ -139,10 +152,7 @@ STEP_TYPE_TO_CLASS: dict[FlowStepType, Callable[[dict[str, Any]], FlowStep]] = {
 }
 
 
-def load_next_links(
-    *,
-    raw_next: Any,
-) -> list[FlowStepLink]:
+def load_next_links(*, raw_next: Any) -> list[FlowStepLink]:
     if isinstance(raw_next, str):
         return [StaticLink.from_json(raw_next)]
 

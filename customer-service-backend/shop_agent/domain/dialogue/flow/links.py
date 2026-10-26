@@ -30,6 +30,7 @@ class FallbackLink(FlowStepLink):
         return cls(target=str(data["else"]))
 
 
+# 从json数据创建链接
 def link_from_json(data: str | dict[str, Any]) -> FlowStepLink:
     if isinstance(data, str):
         return StaticLink.from_json(data)
