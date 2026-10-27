@@ -6,6 +6,10 @@ from typing import Any
 class Command:
     command: str
 
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Command":
+        return cls(command=data["command"])
+
 
 @dataclass
 class StartFlowCommand(Command):
@@ -27,6 +31,8 @@ class ResumeFlowCommand(Command):
     flow: str
 
 
+
+
 def commands_from_json(data: list[dict[str, Any]]) -> list[Command]:
     """从 LLM 输出的 JSON 列表解析为 Command 对象列表。"""
     result: list[Command] = []
@@ -41,3 +47,4 @@ def commands_from_json(data: list[dict[str, Any]]) -> list[Command]:
         elif kind == "resume_flow":
             result.append(ResumeFlowCommand(command=kind, flow=item.get("flow", "")))
     return result
+
