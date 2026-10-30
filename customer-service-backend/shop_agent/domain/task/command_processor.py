@@ -5,7 +5,11 @@ from shop_agent.domain.task.commands import (
     SetSlotsCommand,
     StartFlowCommand,
 )
-from shop_agent.domain.task.contexts import TaskContext
+from shop_agent.domain.task.contexts import (
+    InterruptedSystemContext,
+    StartedSystemContext,
+    TaskContext,
+)
 from shop_agent.domain.task.flow.models import FlowsList
 
 
@@ -44,11 +48,30 @@ class CommandProcessor:
         if state.active_task and state.active_task.flow_id == command.flow:
             return
 
+        previous = state.active_task
+
         # 有其他任务在跑 → 压栈暂停
-        if state.active_task:
-            state.paused_tasks.append(state.active_task)
+        if previous is not None:
+            state.paused_tasks.append(previous)
 
         state.active_task = TaskContext(flow_id=command.flow, step_id=start.id)
+
+        if previous is None:
+            state.active_system_flow = StartedSystemContext(
+                flow_id="system_task_started",
+                step_id=self._system_start_step_id(flows, "system_task_started"),
+                started_flow_id=flow.id,
+                started_flow_name=flow.readable_name(),
+            )
+        else:
+            state.active_system_flow = InterruptedSystemContext(
+                flow_id="system_task_interrupted",
+                step_id=self._system_start_step_id(flows, "system_task_interrupted"),
+                interrupted_flow_id=previous.flow_id,
+                interrupted_flow_name=self._flow_name(previous.flow_id, flows),
+                started_flow_id=flow.id,
+                started_flow_name=flow.readable_name(),
+            )
 
     def _handle_set_slots(self, command: SetSlotsCommand, state) -> None:
         if state.active_task is None:
@@ -67,3 +90,14 @@ class CommandProcessor:
                     state.paused_tasks.append(state.active_task)
                 state.active_task = task
                 return
+
+    def _flow_name(self, flow_id: str, flows: FlowsList) -> str:
+        flow = flows.flow_by_id(flow_id)
+        return flow.readable_name() if flow else flow_id
+
+    def _system_start_step_id(self, flows: FlowsList, flow_id: str) -> str | None:
+        flow = flows.flow_by_id(flow_id)
+        if flow is None:
+            return None
+        start = flow.start_step()
+        return start.id if start is not None else None

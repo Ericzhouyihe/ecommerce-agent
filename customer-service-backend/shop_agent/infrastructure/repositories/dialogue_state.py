@@ -4,9 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from shop_agent.domain.dialogue.contexts import TaskContext
 from shop_agent.domain.dialogue.repository import DialogueStateRepository
 from shop_agent.domain.dialogue.state import DialogueState
+from shop_agent.domain.task.contexts import TaskContext
 from shop_agent.infrastructure.db.models import DialogueStateORM
 
 

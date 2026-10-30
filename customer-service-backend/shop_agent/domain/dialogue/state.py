@@ -1,9 +1,12 @@
 from dataclasses import dataclass, field
 
-from shop_agent.domain.dialogue.contexts import SystemContext
 from shop_agent.domain.dialogue.messages import MessageObject
 from shop_agent.domain.dialogue.sessions import Session, Turn
-from shop_agent.domain.task.contexts import TaskContext
+from shop_agent.domain.task.contexts import (
+    SystemContext,
+    TaskContext,
+    system_context_from_dict,
+)
 
 
 @dataclass
@@ -39,7 +42,7 @@ class DialogueState:
             sender_id=data["sender_id"],
             active_task=TaskContext.from_dict(data["active_task"]) if data["active_task"] else None,
             paused_tasks=[TaskContext.from_dict(task) for task in data.get("paused_tasks", [])],
-            active_system_flow=SystemContext.from_dict(data.get("active_system_flow"))
+            active_system_flow=system_context_from_dict(data["active_system_flow"])
             if data.get("active_system_flow")
             else None,
             focused_object=MessageObject.from_dict(data.get("focused_object"))

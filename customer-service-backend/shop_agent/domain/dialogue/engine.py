@@ -76,6 +76,7 @@ class DialogueEngine:
             state.current_session_id = current.session_id
             # 会话断了,之前未完成的任务/聚焦对象不该跨会话继承
             state.active_task = None
+            state.paused_tasks.clear()
             state.active_system_flow = None
             state.focused_object = None
             state.pending_turn = None
