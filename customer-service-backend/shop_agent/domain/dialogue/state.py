@@ -14,7 +14,7 @@ class DialogueState:
     sender_id: str
     active_task: TaskContext | None = None
     paused_tasks: list[TaskContext] = field(default_factory=list)
-    active_system_flow: SystemContext | None = None
+    active_system_task: SystemContext | None = None
     focused_object: MessageObject | None = None
     sessions: list[Session] = field(default_factory=list)
     current_session_id: str | None = None
@@ -26,8 +26,8 @@ class DialogueState:
             "sender_id": self.sender_id,
             "active_task": self.active_task.to_dict() if self.active_task else None,
             "paused_tasks": [task.to_dict() for task in self.paused_tasks],
-            "active_system_flow": self.active_system_flow.to_dict()
-            if self.active_system_flow
+            "active_system_task": self.active_system_task.to_dict()
+            if self.active_system_task
             else None,
             "focused_object": self.focused_object.to_dict() if self.focused_object else None,
             "sessions": [session.to_dict() for session in self.sessions],
@@ -42,8 +42,8 @@ class DialogueState:
             sender_id=data["sender_id"],
             active_task=TaskContext.from_dict(data["active_task"]) if data["active_task"] else None,
             paused_tasks=[TaskContext.from_dict(task) for task in data.get("paused_tasks", [])],
-            active_system_flow=system_context_from_dict(data["active_system_flow"])
-            if data.get("active_system_flow")
+            active_system_task=system_context_from_dict(data["active_system_task"])
+            if data.get("active_system_task")
             else None,
             focused_object=MessageObject.from_dict(data.get("focused_object"))
             if data.get("focused_object")
@@ -51,3 +51,18 @@ class DialogueState:
             sessions=[Session.from_dict(session) for session in data.get("sessions", [])],
             current_session_id=data.get("current_session_id"),
         )
+
+    def start_system_task(self, system_context: SystemContext):
+        """
+        启动系统任务
+        :param system_context:
+        :return:
+        """
+        self.active_system_task = system_context
+
+    def end_system_task(self):
+        """
+        关闭当前的系统任务
+        :return:
+        """
+        self.active_system_task = None
