@@ -66,3 +66,19 @@ class DialogueState:
         :return:
         """
         self.active_system_task = None
+
+    def interrupt_active_task(self):
+        """
+        中断当前任务
+        :return:
+        """
+        self.paused_tasks.append(self.active_task)
+        self.active_task = None
+
+    def start_task(self, task_context: TaskContext):
+        """
+        启动任务
+        :param task_context:
+        :return:
+        """
+        self.active_task = task_context

@@ -34,12 +34,16 @@ class SystemContext:
 
 @dataclass(slots=True)
 class StartedSystemContext(SystemContext):
-    pass
+    started_flow_id: str = ""
+    started_flow_name: str = ""
 
 
 @dataclass(slots=True)
 class InterruptedSystemContext(SystemContext):
-    pass
+    interrupted_flow_id: str = ""
+    interrupted_flow_name: str = ""
+    started_flow_id: str = ""
+    started_flow_name: str = ""
 
 
 @dataclass(slots=True)
