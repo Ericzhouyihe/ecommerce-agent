@@ -1,3 +1,4 @@
+from shop_agent.domain.dialogue.state import DialogueState
 from shop_agent.domain.task.commands import (
     CancelFlowCommand,
     Command,
@@ -36,7 +37,9 @@ class CommandProcessor:
         elif isinstance(command, ResumeFlowCommand):
             self._handle_resume_flow(command, state)
 
-    def _handle_start_flow(self, command: StartFlowCommand, state, flows: FlowsList) -> None:
+    def _handle_start_flow(
+        self, command: StartFlowCommand, state: DialogueState, flows: FlowsList
+    ) -> None:
         flow = flows.flow_by_id(command.flow)
         if flow is None:
             return
