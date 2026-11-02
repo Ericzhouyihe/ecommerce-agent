@@ -14,7 +14,7 @@ class Command:
 
 @dataclass
 class StartFlowCommand(Command):
-    flow_id: str
+    flow: str
 
 
 @dataclass
@@ -29,7 +29,7 @@ class CancelFlowCommand(Command):
 
 @dataclass
 class ResumeFlowCommand(Command):
-    flow_id: str
+    flow: str
 
 
 COMMAND_NAME_TO_CLASS = {
