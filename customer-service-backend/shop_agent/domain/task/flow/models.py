@@ -52,11 +52,11 @@ class FlowsList:
     def __len__(self) -> int:
         return len(self.flows)
 
-    def flow_by_id(self, flow_id: str) -> Flow | None:
+    def get_flow_by_id(self, flow_id: str) -> Flow | None:
         for flow in self.flows:
             if flow.id == flow_id:
                 return flow
         return None
 
-    def slot_by_name(self, slot_name: str) -> FlowSlot | None:
+    def get_slot_by_name(self, slot_name: str) -> FlowSlot | None:
         return self.slots.get(slot_name)
