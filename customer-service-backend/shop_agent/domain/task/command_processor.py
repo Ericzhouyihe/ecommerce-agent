@@ -45,8 +45,9 @@ class CommandProcessor:
         # 获取目标flow
         target_flow: Flow = flows.get_flow_by_id(command.flow)
 
+        active_task = state.active_task
         # 判断当前是否有正在运行的flow
-        if state.active_system_flow is not None:
+        if active_task is not None:
             # 挂起旧任务
             state.interrupt_active_task()
 
@@ -62,8 +63,8 @@ class CommandProcessor:
                 system_context=InterruptedSystemContext(
                     flow_id="system_task_started",
                     step_id=flows.get_flow_by_id("system_task_started").start_step().id,
-                    interrupted_flow_id=target_flow.id,
-                    interrupted_flow_name=target_flow.name,
+                    interrupted_flow_id=active_task.flow_id,
+                    interrupted_flow_name=flows.get_flow_by_id(active_task.flow_id).name,
                     started_flow_id=state.active_system_flow.flow_id,
                     started_flow_name=state.active_system_flow.flow_name,
                 )
