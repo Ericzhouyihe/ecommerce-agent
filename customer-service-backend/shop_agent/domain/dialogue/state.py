@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any
 
 from shop_agent.domain.dialogue.messages import MessageObject
 from shop_agent.domain.dialogue.sessions import Session, Turn
@@ -78,6 +79,22 @@ class DialogueState:
     def start_task(self, task_context: TaskContext):
         """
         启动任务
+        :param task_context:
+        :return:
+        """
+        self.active_task = task_context
+
+    def set_slots(self, slots: dict[str, Any]):
+        """
+        设置任务槽位
+        :param slots:
+        :return:
+        """
+        self.active_task.slots.update(slots)
+
+    def resume_active_task(self, task_context: TaskContext):
+        """
+        恢复当前任务
         :param task_context:
         :return:
         """

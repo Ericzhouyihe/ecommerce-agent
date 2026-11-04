@@ -46,18 +46,20 @@ class InterruptedSystemContext(SystemContext):
     started_flow_name: str = ""
 
 
-@dataclass(slots=True)
-class CollectSystemContext(SystemContext):
-    pass
+@dataclass
+class CanceledSystemContext(SystemContext):
+    canceled_flow_id: str = ""
+    canceled_flow_name: str = ""
 
 
 @dataclass(slots=True)
 class ResumedSystemContext(SystemContext):
-    pass
+    resumed_flow_id: str = ""
+    resumed_flow_name: str = ""
 
 
 @dataclass(slots=True)
-class CanceledSystemContext(SystemContext):
+class CollectSystemContext(SystemContext):
     pass
 
 

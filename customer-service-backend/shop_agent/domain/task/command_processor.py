@@ -7,7 +7,9 @@ from shop_agent.domain.task.commands import (
     StartFlowCommand,
 )
 from shop_agent.domain.task.contexts import (
+    CanceledSystemContext,
     InterruptedSystemContext,
+    ResumedSystemContext,
     StartedSystemContext,
     TaskContext,
 )
@@ -43,7 +45,7 @@ class CommandProcessor:
         # 清理清理系统任务的上下文
         state.end_system_task()
         # 获取目标flow
-        target_flow: Flow = flows.get_flow_by_id(command.flow)
+        target_flow: Flow = flows.get_flow_by_id(flow_id=command.flow)
 
         active_task = state.active_task
         # 判断当前是否有正在运行的flow
@@ -61,12 +63,12 @@ class CommandProcessor:
             # 启动系统任务
             state.start_system_task(
                 system_context=InterruptedSystemContext(
-                    flow_id="system_task_started",
-                    step_id=flows.get_flow_by_id("system_task_started").start_step().id,
+                    flow_id="system_task_interrupted",
+                    step_id=flows.get_flow_by_id(flow_id="system_task_interrupted").start_step().id,
                     interrupted_flow_id=active_task.flow_id,
-                    interrupted_flow_name=flows.get_flow_by_id(active_task.flow_id).name,
-                    started_flow_id=state.active_system_flow.flow_id,
-                    started_flow_name=state.active_system_flow.flow_name,
+                    interrupted_flow_name=flows.get_flow_by_id(flow_id=active_task.flow_id).name,
+                    started_flow_id=target_flow.id,
+                    started_flow_name=target_flow.name,
                 )
             )
 
@@ -83,19 +85,71 @@ class CommandProcessor:
             state.start_system_task(
                 system_context=StartedSystemContext(
                     flow_id="system_task_started",
-                    step_id=flows.get_flow_by_id("system_task_started").start_step().id,
+                    step_id=flows.get_flow_by_id(flow_id="system_task_started").start_step().id,
                     started_flow_id=target_flow.id,
                     started_flow_name=target_flow.name,
                 )
             )
 
     def _handle_set_slots(self, command: SetSlotsCommand, state: DialogueState):
-        pass
+        if state.active_task:
+            state.set_slots(command.slots)
 
     def _handle_cancel_flow(self, state: DialogueState, flows: FlowsList):
-        pass
+        active_task = state.active_task
+        target_flow = flows.get_flow_by_id(flow_id=active_task.flow_id)
+
+        # 取消当前task
+        state.cancel_active_task()
+
+        # 启动system_task_canceled
+        state.start_system_task(
+            system_context=CanceledSystemContext(
+                flow_id="system_task_canceled",
+                step_id=flows.get_flow_by_id("system_task_canceled").start_step().id,
+                canceled_flow_id=target_flow.id,
+                canceled_flow_name=target_flow.name,
+            )
+        )
 
     def _handle_resume_flow(
         self, command: ResumeFlowCommand, state: DialogueState, flows: FlowsList
     ):
-        pass
+        target_flow = flows.get_flow_by_id(flow_id=command.flow)
+        if target_flow is None:
+            return
+
+        state.end_system_task()
+
+        if state.active_task:
+            target_task = state.paused_tasks.pop()
+            state.resume_active_task(target_task)
+
+            state.resume_active_task(task_context=target_task)
+
+            state.start_system_task(
+                system_context=ResumedSystemContext(
+                    flow_id="system_task_resumed",
+                    step_id=flows.get_flow_by_id(flow_id="system_task_resumed").start_step().id,
+                    resumed_flow_id=target_flow.id,
+                    resumed_flow_name=target_flow.name,
+                )
+            )
+        else:
+            if target_flow.id == state.active_task.flow_id:
+                return
+
+            target_task = state.paused_tasks.pop()
+            state.interrupt_active_task()
+            state.resume_active_task(task_context=target_task)
+
+            state.start_system_task(
+                system_context=InterruptedSystemContext(
+                    flow_id="system_task_interrupted",
+                    step_id=flows.get_flow_by_id(flow_id="system_task_interrupted").start_step().id,
+                    interrupted_flow_id=target_task.flow_id,
+                    interrupted_flow_name=flows.get_flow_by_id(flow_id=target_task.flow_id).name,
+                    started_flow_id=target_flow.id,
+                    started_flow_name=target_flow.name,
+                )
+            )
