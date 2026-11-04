@@ -39,9 +39,7 @@ class CommandProcessor:
         elif isinstance(command, ResumeFlowCommand):
             self._handle_resume_flow(command, state)
 
-    def _handle_start_flow(
-        self, command: StartFlowCommand, state: DialogueState, flows: FlowsList
-    ) -> None:
+    def _handle_start_flow(self, command: StartFlowCommand, state: DialogueState, flows: FlowsList):
         # 清理清理系统任务的上下文
         state.end_system_task()
         # 获取目标flow
@@ -93,7 +91,7 @@ class CommandProcessor:
 
     def _handle_set_slots(self, command: SetSlotsCommand, state: DialogueState):
         if state.active_task:
-            state.set_slots(command.slots)
+            state.set_slots(slots=command.slots)
 
     def _handle_cancel_flow(self, state: DialogueState, flows: FlowsList):
         active_task = state.active_task
@@ -106,7 +104,7 @@ class CommandProcessor:
         state.start_system_task(
             system_context=CanceledSystemContext(
                 flow_id="system_task_canceled",
-                step_id=flows.get_flow_by_id("system_task_canceled").start_step().id,
+                step_id=flows.get_flow_by_id(flow_id="system_task_canceled").start_step().id,
                 canceled_flow_id=target_flow.id,
                 canceled_flow_name=target_flow.name,
             )
@@ -123,7 +121,7 @@ class CommandProcessor:
 
         if state.active_task:
             target_task = state.paused_tasks.pop()
-            state.resume_active_task(target_task)
+            state.resume_active_task(task_context=target_task)
 
             state.resume_active_task(task_context=target_task)
 
