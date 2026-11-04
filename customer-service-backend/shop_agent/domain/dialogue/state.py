@@ -92,10 +92,14 @@ class DialogueState:
         """
         self.active_task.slots.update(slots)
 
-    def resume_active_task(self, task_context: TaskContext):
+    def resume_task(self, task_id: str):
         """
-        恢复当前任务
-        :param task_context:
+        恢复任务
+        :param task_id:
         :return:
         """
-        self.active_task = task_context
+        self.active_task = self.paused_tasks.pop()
+        if self.active_task.id == task_id:
+            self.active_task = self.paused_tasks.pop()
+        else:
+            self.paused_tasks.append(self.active_task)
