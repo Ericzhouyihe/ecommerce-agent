@@ -113,7 +113,7 @@ class CommandProcessor:
     def _handle_resume_flow(
         self, command: ResumeFlowCommand, state: DialogueState, flows: FlowsList
     ):
-        target_flow: Flow = flows.get_flow_by_id(flow_id=command.flow)
+        target_flow = flows.get_flow_by_id(flow_id=command.flow)
         if target_flow is None:
             return
 

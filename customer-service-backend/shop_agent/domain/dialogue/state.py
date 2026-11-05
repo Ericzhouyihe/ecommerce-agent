@@ -86,20 +86,28 @@ class DialogueState:
 
     def set_slots(self, slots: dict[str, Any]):
         """
-        设置任务槽位
+        更新slots
         :param slots:
         :return:
         """
         self.active_task.slots.update(slots)
 
-    def resume_task(self, task_id: str):
+    def cancel_active_task(self):
         """
-        恢复任务
-        :param task_id:
+        取消当前任务
         :return:
         """
-        self.active_task = self.paused_tasks.pop()
-        if self.active_task.id == task_id:
-            self.active_task = self.paused_tasks.pop()
-        else:
-            self.paused_tasks.append(self.active_task)
+        self.active_task = None
+        self.active_system_task = None
+
+    def resume_task(self, flow_id: str):
+        """
+        恢复任务
+        :param flow_id:
+        :return:
+        """
+        for task in self.paused_tasks:
+            if task.flow_id == flow_id:
+                self.active_task = task
+                self.paused_tasks.remove(task)
+                break
