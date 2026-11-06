@@ -1,8 +1,8 @@
-from shop_agent.domain.task.actions.base import Action
+from shop_agent.domain.task.action.base import Action
 
 
 class ActionRegistry:
-    """Resolver for runtime actions."""
+    """运行时操作的解析器。"""
 
     def __init__(self) -> None:
         self._actions: dict[str, Action] = {}

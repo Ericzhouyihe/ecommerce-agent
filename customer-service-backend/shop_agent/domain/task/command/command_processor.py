@@ -1,5 +1,5 @@
 from shop_agent.domain.dialogue.state import DialogueState
-from shop_agent.domain.task.commands import (
+from shop_agent.domain.task.command.commands import (
     CancelFlowCommand,
     Command,
     ResumeFlowCommand,
