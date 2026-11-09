@@ -30,7 +30,9 @@ class DialogueState:
             "active_system_task": self.active_system_task.to_dict()
             if self.active_system_task
             else None,
-            "focused_object": self.focused_object.to_dict() if self.focused_object else None,
+            "focused_object": self.focused_object.to_dict()
+            if self.focused_object
+            else None,
             "sessions": [session.to_dict() for session in self.sessions],
             "current_session_id": self.current_session_id,
             # "pending_turn": 不持久化,因为是瞬态字段
@@ -41,15 +43,21 @@ class DialogueState:
         """从持久化 JSON 重建;忽略未知键,兼容结构演进"""
         return cls(
             sender_id=data["sender_id"],
-            active_task=TaskContext.from_dict(data["active_task"]) if data["active_task"] else None,
-            paused_tasks=[TaskContext.from_dict(task) for task in data.get("paused_tasks", [])],
+            active_task=TaskContext.from_dict(data["active_task"])
+            if data["active_task"]
+            else None,
+            paused_tasks=[
+                TaskContext.from_dict(task) for task in data.get("paused_tasks", [])
+            ],
             active_system_task=system_context_from_dict(data["active_system_task"])
             if data.get("active_system_task")
             else None,
             focused_object=MessageObject.from_dict(data.get("focused_object"))
             if data.get("focused_object")
             else None,
-            sessions=[Session.from_dict(session) for session in data.get("sessions", [])],
+            sessions=[
+                Session.from_dict(session) for session in data.get("sessions", [])
+            ],
             current_session_id=data.get("current_session_id"),
         )
 
@@ -111,3 +119,12 @@ class DialogueState:
                 self.active_task = task
                 self.paused_tasks.remove(task)
                 break
+
+    def current_session(self) -> Session | None:
+        """
+        获取当前会话
+        """
+        for session in self.sessions:
+            if session.session_id == self.current_session_id:
+                return session
+        return None
