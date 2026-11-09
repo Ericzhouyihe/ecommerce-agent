@@ -1,8 +1,7 @@
 from typing import Any
 
 from jinja2 import Template
-from langchain.output_parsers import StrOutputParser
-from langchain.prompts import PromptTemplate
+from langchain import PromptTemplate, StrOutputParser
 
 from shop_agent.domain.dialogue.messages import BotMessage
 from shop_agent.domain.dialogue.state import DialogueState
