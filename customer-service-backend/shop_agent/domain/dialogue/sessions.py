@@ -8,22 +8,22 @@ from shop_agent.domain.dialogue.messages import BotMessage, UserMessage
 class Turn:
     # 一轮对话:用户的一条输入 + 机器人的若干条回复
     turn_id: str
-    input_message: UserMessage
-    assistant_messages: list[BotMessage]
+    user_message: UserMessage
+    bot_messages: list[BotMessage]
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "turn_id": self.turn_id,
-            "input_message": self.input_message.to_dict(),
-            "assistant_messages": [msg.to_dict() for msg in self.assistant_messages],
+            "user_message": self.user_message.to_dict(),
+            "bot_messages": [msg.to_dict() for msg in self.bot_messages],
         }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Turn":
         return cls(
             turn_id=data["turn_id"],
-            input_message=UserMessage.from_dict(data["input_message"]),
-            assistant_messages=[BotMessage.from_dict(msg) for msg in data["assistant_messages"]],
+            user_message=UserMessage.from_dict(data["user_message"]),
+            bot_messages=[BotMessage.from_dict(msg) for msg in data["bot_messages"]],
         )
 
 

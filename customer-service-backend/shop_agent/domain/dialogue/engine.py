@@ -3,7 +3,12 @@ import uuid
 
 from shop_agent.domain.dialogue.handlers.chitchat_handler import handle_chitchat
 from shop_agent.domain.dialogue.handlers.task_handler import handle_task
-from shop_agent.domain.dialogue.messages import BotMessage, MessageType, ProcessResult, UserMessage
+from shop_agent.domain.dialogue.messages import (
+    BotMessage,
+    MessageType,
+    ProcessResult,
+    UserMessage,
+)
 from shop_agent.domain.dialogue.planner.turn_plan_validator import validate_turn_plan
 from shop_agent.domain.dialogue.planner.turn_planner import TurnKind, plan_turn
 from shop_agent.domain.dialogue.sessions import Session, Turn
@@ -23,7 +28,7 @@ class DialogueEngine:
         turn = Turn(
             turn_id=str(uuid.uuid4()),
             input_message=user_message,
-            assistant_messages=[],
+            bot_messages=[],
         )
         dialogue_state.pending_turn = turn
 
@@ -48,9 +53,11 @@ class DialogueEngine:
                     replies = [BotMessage(text="知识问答(待实现)")]  # 第4步再接
                 case _:
                     # TODO: 无效分类待实现
-                    replies = [BotMessage(text="抱歉，我没太理解你的意思，能说得更具体些吗？")]
+                    replies = [
+                        BotMessage(text="抱歉，我没太理解你的意思，能说得更具体些吗？")
+                    ]
 
-        turn.assistant_messages.extend(replies)
+        turn.bot_messages.extend(replies)
 
         # 4.提交本轮:写进 session,清空 pending_turn
         session.turns.append(turn)
@@ -68,10 +75,13 @@ class DialogueEngine:
         current = None
         if state.current_session_id:
             current = next(
-                (s for s in state.sessions if s.session_id == state.current_session_id), None
+                (s for s in state.sessions if s.session_id == state.current_session_id),
+                None,
             )
         if current is None or now - current.last_activity_at > SESSION_TIMEOUT_SECONDS:
-            current = Session(session_id=str(uuid.uuid4()), started_at=now, last_activity_at=now)
+            current = Session(
+                session_id=str(uuid.uuid4()), started_at=now, last_activity_at=now
+            )
             state.sessions.append(current)
             state.current_session_id = current.session_id
             # 会话断了,之前未完成的任务/聚焦对象不该跨会话继承
