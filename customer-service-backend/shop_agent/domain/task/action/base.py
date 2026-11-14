@@ -16,5 +16,7 @@ class Action(ABC):
     name: str
 
     @abstractmethod
-    async def run(self, state: DialogueState, action_kwargs: dict[str, Any]) -> ActionResult:
+    async def run(
+        self, state: DialogueState, action_kwargs: dict[str, Any]
+    ) -> ActionResult:
         pass

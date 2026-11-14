@@ -12,6 +12,8 @@ from shop_agent.prompts.history_builder import HistoryBuilder
 
 
 class ActionResponse(Action):
+    name = "action_response"
+
     async def run(
         self, state: DialogueState, action_kwargs: dict[str, Any]
     ) -> ActionResult:

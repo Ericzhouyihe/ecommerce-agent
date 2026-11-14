@@ -3,11 +3,7 @@ from typing import Any
 
 from shop_agent.domain.dialogue.messages import MessageObject
 from shop_agent.domain.dialogue.sessions import Session, Turn
-from shop_agent.domain.task.contexts import (
-    SystemContext,
-    TaskContext,
-    system_context_from_dict,
-)
+from shop_agent.domain.task.contexts import SystemContext, TaskContext
 
 
 @dataclass
@@ -49,7 +45,7 @@ class DialogueState:
             paused_tasks=[
                 TaskContext.from_dict(task) for task in data.get("paused_tasks", [])
             ],
-            active_system_task=system_context_from_dict(data["active_system_task"])
+            active_system_task=SystemContext.from_dict(data["active_system_task"])
             if data.get("active_system_task")
             else None,
             focused_object=MessageObject.from_dict(data.get("focused_object"))
