@@ -2,7 +2,7 @@ import time
 import uuid
 
 from shop_agent.domain.dialogue.handlers.chitchat_handler import handle_chitchat
-from shop_agent.domain.dialogue.handlers.task_handler import handle_task
+from shop_agent.domain.task.handler import handle_task
 from shop_agent.domain.dialogue.messages import (
     BotMessage,
     MessageType,

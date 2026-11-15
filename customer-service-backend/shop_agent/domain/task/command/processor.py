@@ -39,7 +39,9 @@ class CommandProcessor:
         elif isinstance(command, ResumeFlowCommand):
             self._handle_resume_flow(command, state)
 
-    def _handle_start_flow(self, command: StartFlowCommand, state: DialogueState, flows: FlowsList):
+    def _handle_start_flow(
+        self, command: StartFlowCommand, state: DialogueState, flows: FlowsList
+    ):
         # 清理清理系统任务的上下文
         state.end_system_task()
         # 获取目标flow
@@ -60,9 +62,13 @@ class CommandProcessor:
             state.start_system_task(
                 InterruptedSystemContext(
                     flow_id="system_task_interrupted",
-                    step_id=flows.get_flow_by_id("system_task_interrupted").start_step().id,
+                    step_id=flows.get_flow_by_id("system_task_interrupted")
+                    .start_step()
+                    .id,
                     interrupted_flow_id=active_task.flow_id,
-                    interrupted_flow_name=flows.get_flow_by_id(active_task.flow_id).name,
+                    interrupted_flow_name=flows.get_flow_by_id(
+                        active_task.flow_id
+                    ).name,
                     started_flow_id=target_flow.id,
                     started_flow_name=target_flow.name,
                 )
@@ -73,7 +79,9 @@ class CommandProcessor:
             return
         else:
             state.start_task(
-                TaskContext(flow_name=target_flow.name, step_id=target_flow.start_step().id)
+                TaskContext(
+                    flow_name=target_flow.name, step_id=target_flow.start_step().id
+                )
             )
 
             state.start_system_task(
@@ -100,7 +108,9 @@ class CommandProcessor:
         state.start_system_task(
             CanceledSystemContext(
                 flow_id="system_task_canceled",
-                step_id=flows.get_flow_by_id(flow_id="system_task_canceled").start_step().id,
+                step_id=flows.get_flow_by_id(flow_id="system_task_canceled")
+                .start_step()
+                .id,
                 canceled_flow_id=target_flow.id,
                 canceled_flow_name=target_flow.name,
             )
@@ -127,9 +137,13 @@ class CommandProcessor:
             state.start_system_task(
                 InterruptedSystemContext(
                     flow_id="system_task_interrupted",
-                    step_id=flows.get_flow_by_id("system_task_interrupted").start_step().id,
+                    step_id=flows.get_flow_by_id("system_task_interrupted")
+                    .start_step()
+                    .id,
                     interrupted_flow_id=active_task.flow_id,
-                    interrupted_flow_name=flows.get_flow_by_id(active_task.flow_id).name,
+                    interrupted_flow_name=flows.get_flow_by_id(
+                        active_task.flow_id
+                    ).name,
                     started_flow_id=target_flow.id,
                     started_flow_name=target_flow.name,
                 )
