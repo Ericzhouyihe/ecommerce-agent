@@ -2,8 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from shop_agent.api.dependencies import get_chat_service
-from shop_agent.api.v1.mappers import build_chat_response, build_user_message
+from shop_agent.api.dependencies import get_dialogue_service
+from shop_agent.api.v1.mappers import build_chat_response, build_user_message, build_history_response
 from shop_agent.api.v1.scheme import (
     ChatRequest,
     ChatResponse,
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/chat", tags=["智能客服"])
 @router.post("", summary="发送消息并获取回复")
 async def chat(
     message: ChatRequest,
-    dialogue_service: Annotated[DialogueService, Depends(get_chat_service)],
+    dialogue_service: Annotated[DialogueService, Depends(get_dialogue_service)],
 ) -> ChatResponse:
 
     process_result: ProcessResult = await dialogue_service.process_message(
@@ -31,6 +31,7 @@ async def chat(
 @router.get("/history", summary="获取聊天历史")
 async def chat_history(
     sender_id: str,
-    service: Annotated[DialogueService, Depends(get_chat_service)],
+    service: Annotated[DialogueService, Depends(get_dialogue_service)],
 ) -> HistoryResponse:
-    return await service.get_history(sender_id)
+    state = await service.get_history(sender_id)
+    return build_history_response(sender_id, state)

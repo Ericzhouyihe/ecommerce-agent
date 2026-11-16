@@ -1,11 +1,12 @@
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate, load_prompt
+from langchain_core.prompts import PromptTemplate
 
 from shop_agent.domain.dialogue.messages import BotMessage, UserMessage
 from shop_agent.domain.dialogue.sessions import Turn
 from shop_agent.domain.knowledge.providers import KnowledgeChunk
-from shop_agent.infrastructure import llm
+from shop_agent.infrastructure.llm import llm
 from shop_agent.prompts.history_builder import HistoryBuilder
+from shop_agent.prompts.loader import load_prompt
 
 
 class KnowledgeResponder:

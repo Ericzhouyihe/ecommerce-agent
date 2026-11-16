@@ -1,38 +1,81 @@
-from dataclasses import dataclass, field
-from enum import Enum
+import json
+from dataclasses import asdict
+from typing import Any
+
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import PromptTemplate
+
+from shop_agent.domain.dialogue.planner.models import TurnPlan
+from shop_agent.domain.dialogue.state import DialogueState
+from shop_agent.domain.knowledge.intents import KnowledgeIntent
+from shop_agent.domain.task.flow.models import Flow, FlowsList
+from shop_agent.infrastructure.llm import llm
+from shop_agent.prompts.history_builder import HistoryBuilder
+from shop_agent.prompts.loader import load_prompt
 
 
-class TurnKind(Enum):
-    CHITCHAT = "chitchat"  # 闲聊
-    KNOWLEDGE = "knowledge"  # 知识问答
-    TASK = "task"  # 业务任务(要推进 flow)
-    INVALID = "invalid"  # 听不懂 / 无法处理
+class TurnPlanner:
+    """用 LLM 分析对话上下文,产出本轮的执行计划(TurnPlan)。"""
 
+    async def predict(
+        self,
+        state: DialogueState,
+        flows: FlowsList,
+        knowledge_intents: dict[str, KnowledgeIntent],
+    ) -> TurnPlan:
+        prompt_inputs = self._build_prompt_inputs(state, flows, knowledge_intents)
+        return await self._predict_from_prompt_inputs(prompt_inputs)
 
-@dataclass
-class TurnPlan:
-    kind: TurnKind = TurnKind.INVALID
-    flow_id: str | None = None  # kind == TASK 时必填
-    slots: dict = field(default_factory=dict)  # 本轮抽取到的槽位
-    reason: str | None = None  # 为什么判定成 INVALID,便于调试
+    def _build_prompt_inputs(
+        self,
+        state: DialogueState,
+        flows: FlowsList,
+        knowledge_intents: dict[str, KnowledgeIntent],
+    ) -> dict[str, Any]:
+        user_message = HistoryBuilder._render_user_message(
+            state.pending_turn.user_message
+        )
+        history = HistoryBuilder.build(state.current_session().turns)
+        active_task = state.active_task
+        focused_object = state.focused_object
+        _flows: list[Flow] = flows.flows
+        return {
+            "current_conversation": history,
+            "user_message": user_message,
+            "available_flows_json": json.dumps(
+                {
+                    "flows": [
+                        {k: v for k, v in asdict(flow).items() if k != "steps"}
+                        for flow in _flows
+                    ]
+                },
+                ensure_ascii=False,
+            ),
+            "active_task_json": json.dumps(
+                asdict(active_task) if active_task is not None else None,
+                ensure_ascii=False,
+            ),
+            "interrupted_tasks_json": json.dumps(
+                [asdict(task) for task in state.paused_tasks], ensure_ascii=False
+            ),
+            "focused_object_json": json.dumps(
+                asdict(focused_object) if focused_object is not None else None,
+                ensure_ascii=False,
+            ),
+            "knowledge_intents_json": json.dumps(
+                [
+                    {"id": intent.id, "description": intent.description}
+                    for intent in knowledge_intents.values()
+                ],
+                ensure_ascii=False,
+            ),
+        }
 
-
-from shop_agent.domain.dialogue.planner.turn_planner import TurnKind
-from shop_agent.domain.dialogue.sessions import Session
-
-TASK_KEYWORDS = {
-    "order_status_query": ["查订单", "订单状态", "订单怎么样"],
-}
-CHITCHAT_KEYWORDS = ["你好", "在吗", "谢谢", "哈哈"]
-
-
-async def plan_turn(text: str, session: Session) -> TurnPlan:
-    # 规则版：第5步再换成 LLM 意图分类
-    for flow_id, keywords in TASK_KEYWORDS.items():
-        if any(kw in text for kw in keywords):
-            return TurnPlan(kind=TurnKind.TASK, flow_id=flow_id)
-
-    if any(kw in text for kw in CHITCHAT_KEYWORDS):
-        return TurnPlan(kind=TurnKind.CHITCHAT)
-
-    return TurnPlan(kind=TurnKind.INVALID, reason="no keyword matched")
+    async def _predict_from_prompt_inputs(
+        self, prompt_inputs: dict[str, Any]
+    ) -> TurnPlan:
+        prompt_text = load_prompt("turn_plan")
+        prompt = PromptTemplate.from_template(prompt_text, template_format="jinja2")
+        chain = prompt | llm | JsonOutputParser()
+        llm_output = await chain.ainvoke(prompt_inputs)
+        return TurnPlan.from_dict(llm_output)

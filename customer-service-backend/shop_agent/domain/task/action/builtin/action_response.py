@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from shop_agent.domain.dialogue.messages import BotMessage
 from shop_agent.domain.dialogue.state import DialogueState
 from shop_agent.domain.task.action.base import Action, ActionResult
-from shop_agent.infrastructure import llm
+from shop_agent.infrastructure.llm import llm
 from shop_agent.prompts.history_builder import HistoryBuilder
 
 
@@ -17,12 +17,12 @@ class ActionResponse(Action):
     async def run(
         self, state: DialogueState, action_kwargs: dict[str, Any]
     ) -> ActionResult:
-        mode = action_kwargs.get("model", "static")
+        mode = action_kwargs.get("mode", "static")
         if mode == "static":
             text = action_kwargs["text"]
             rendered_text = self._render_text(text, state)
             return ActionResult(messages=[BotMessage(text=rendered_text)])
-        elif mode == "repharse":
+        elif mode == "rephrase":
             text = action_kwargs["text"]
             rendered_text = self._render_text(text, state)
             prompt_text = action_kwargs["prompt"]
@@ -37,7 +37,7 @@ class ActionResponse(Action):
         """渲染文本, 使用jinja2模板渲染文本"""
         template = Template(text)
         return template.render(
-            slots=state.active_task.slots,
+            slots=state.active_task.slots if state.active_task else {},
             context=state.active_system_task or state.active_task,
         )
 
@@ -45,7 +45,7 @@ class ActionResponse(Action):
         self, prompt_text: str, state: DialogueState, rendered_text: str = ""
     ) -> str:
         """调用模型, 返回模型回复"""
-        prompt = PromptTemplate.from_template(prompt_text, template_type="jinja2")
+        prompt = PromptTemplate.from_template(prompt_text, template_format="jinja2")
 
         output_parser = StrOutputParser()
         chain = prompt | llm | output_parser

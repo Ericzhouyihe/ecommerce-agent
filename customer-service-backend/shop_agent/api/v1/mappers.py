@@ -5,6 +5,8 @@ from shop_agent.api.v1.scheme import (
     ChatObject,
     ChatRequest,
     ChatResponse,
+    HistoryMessage,
+    HistoryResponse,
 )
 from shop_agent.domain.dialogue.messages import (
     MessageObject,
@@ -12,6 +14,7 @@ from shop_agent.domain.dialogue.messages import (
     ProcessResult,
     UserMessage,
 )
+from shop_agent.domain.dialogue.state import DialogueState
 
 
 def _to_message_object(chat_object: ChatObject | None) -> MessageObject | None:
@@ -55,3 +58,29 @@ def build_chat_response(process_result: ProcessResult) -> ChatResponse:
             for m in process_result.messages
         ],
     )
+
+
+def build_history_response(
+    sender_id: str, state: DialogueState
+) -> HistoryResponse:
+    """把整个 DialogueState 的会话历史摊平成 user/bot 消息列表。"""
+    messages: list[HistoryMessage] = []
+    for session in state.sessions:
+        for turn in session.turns:
+            user_message = turn.user_message
+            messages.append(
+                HistoryMessage(
+                    role="user",
+                    text=user_message.text,
+                    object=_to_chat_object(user_message.object),
+                )
+            )
+            for bot_message in turn.bot_messages:
+                messages.append(
+                    HistoryMessage(
+                        role="bot",
+                        text=bot_message.text,
+                        object=_to_chat_object(bot_message.object),
+                    )
+                )
+    return HistoryResponse(sender_id=sender_id, messages=messages)

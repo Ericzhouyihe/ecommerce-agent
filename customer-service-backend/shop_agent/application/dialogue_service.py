@@ -5,6 +5,8 @@ from shop_agent.domain.dialogue.state import DialogueState
 
 
 class DialogueService:
+    """应用服务:串起"加载状态 -> 引擎处理 -> 保存状态"的事务边界。"""
+
     def __init__(
         self, dialogue_state_repository: DialogueStateRepository, dialogue_engine: DialogueEngine
     ):
@@ -27,3 +29,7 @@ class DialogueService:
 
         # 4. 返回本轮处理结果
         return process_result
+
+    async def get_history(self, sender_id: str) -> DialogueState:
+        """读取该用户的完整对话状态(历史从中提取)。"""
+        return await self.dialogue_state_repository.load_state(sender_id)

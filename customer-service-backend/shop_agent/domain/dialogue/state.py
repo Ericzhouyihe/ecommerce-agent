@@ -1,7 +1,9 @@
+import time
+import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
-from shop_agent.domain.dialogue.messages import MessageObject
+from shop_agent.domain.dialogue.messages import MessageObject, UserMessage
 from shop_agent.domain.dialogue.sessions import Session, Turn
 from shop_agent.domain.task.contexts import SystemContext, TaskContext
 
@@ -86,10 +88,11 @@ class DialogueState:
 
     def set_slots(self, slots: dict[str, Any]):
         """
-        更新slots
+        更新slots(写入业务任务;系统任务运行期间也写到业务任务上)
         :param slots: 要更新的slots
         """
-        self.active_task.slots.update(slots)
+        if self.active_task is not None:
+            self.active_task.slots.update(slots)
 
     def cancel_active_task(self):
         """
@@ -120,7 +123,7 @@ class DialogueState:
 
     def current_task(self) -> TaskContext | None:
         """
-        获取当前任务
+        获取当前任务(系统任务优先执行)
         """
         return self.active_system_task or self.active_task
 
@@ -129,3 +132,54 @@ class DialogueState:
         关闭当前任务
         """
         self.active_task = None
+
+    def remove_slot(self, slot_name: str):
+        """
+        删除指定槽位(校验失败时打回重填)
+        """
+        self.active_task.slots.pop(slot_name, None)
+
+    def start_session(self):
+        """
+        开启新会话
+        """
+        now = time.time()
+        session = Session(
+            session_id=str(uuid.uuid4()), started_at=now, last_activity_at=now
+        )
+        self.sessions.append(session)
+        self.current_session_id = session.session_id
+
+    def close_current_session(self):
+        """
+        关闭当前会话(超时后由引擎调用)
+        """
+        session = self.current_session()
+        if session is not None:
+            session.closed_at = time.time()
+        self.current_session_id = None
+
+    def reset_runtime_state_for_new_session(self):
+        """
+        新会话开始前清空运行时状态:未完成任务不该跨会话继承
+        """
+        self.active_task = None
+        self.active_system_task = None
+        self.focused_object = None
+        self.paused_tasks = []
+
+    def begin_turn(self, message: UserMessage):
+        """
+        开启新一轮对话(先挂成 pending,提交时才写入会话)
+        """
+        self.pending_turn = Turn(
+            turn_id=str(uuid.uuid4()), user_message=message, bot_messages=[]
+        )
+
+    def commit_pending_turn(self):
+        """
+        提交本轮对话:写进当前会话,清空 pending
+        """
+        if self.pending_turn is not None:
+            self.current_session().turns.append(self.pending_turn)
+        self.pending_turn = None

@@ -37,7 +37,7 @@ class ProductAPIProvider(KnowledgeProvider):
 
     async def _get_product_info_by_id(self, product_id: str) -> dict[str, Any]:
         url = f"{settings.commerce_api_base_url}/products/{product_id}"
-        response = await http_client.http_client.get(url)
+        response = await http_client.get_http_client().get(url)
         return response.json()["data"]
 
 
@@ -70,12 +70,12 @@ class OrderAPIProvider(KnowledgeProvider):
 
     async def _fetch_order(self, order_number) -> dict[str, Any]:
         url = f"{settings.commerce_api_base_url}/orders/{order_number}"
-        response = await http_client.http_client.get(url)
+        response = await http_client.get_http_client().get(url)
         return response.json()["data"]
 
     async def _fetch_logistics(self, order_number) -> dict[str, Any]:
         url = f"{settings.commerce_api_base_url}/orders/{order_number}/logistics"
-        response = await http_client.http_client.get(url)
+        response = await http_client.get_http_client().get(url)
         return response.json().get("data", {})
 
 

@@ -20,45 +20,43 @@ class CommandProcessor:
     """把 Command 应用到 DialogueState 上。
 
     职责边界:
-      - 只修改 active_task / paused_tasks / active_system_flow 三类状态
+      - 只修改 active_task / paused_tasks / active_system_task 三类状态
       - 不读数据库、不调 LLM、不执行 action
       - 流程推进交给 FlowExecutor,由 TaskHandler 串联
     """
 
-    def apply(self, state, commands: list[Command], flows: FlowsList) -> None:
+    def run(self, commands: list[Command], state: DialogueState, flows: FlowsList):
         for command in commands:
             self._apply(command, state, flows)
 
-    def _apply(self, command: Command, state, flows: FlowsList) -> None:
+    def _apply(self, command: Command, state: DialogueState, flows: FlowsList):
         if isinstance(command, StartFlowCommand):
             self._handle_start_flow(command, state, flows)
         elif isinstance(command, SetSlotsCommand):
             self._handle_set_slots(command, state)
         elif isinstance(command, CancelFlowCommand):
-            self._handle_cancel_flow(state)
+            self._handle_cancel_flow(state, flows)
         elif isinstance(command, ResumeFlowCommand):
-            self._handle_resume_flow(command, state)
+            self._handle_resume_flow(command, state, flows)
 
     def _handle_start_flow(
         self, command: StartFlowCommand, state: DialogueState, flows: FlowsList
     ):
-        # 清理清理系统任务的上下文
+        # 清理系统任务的上下文
         state.end_system_task()
         # 获取目标flow
-        target_flow: Flow = flows.get_flow_by_id(command.flow)
+        target_flow: Flow | None = flows.get_flow_by_id(command.flow)
+        if target_flow is None:
+            return
 
         active_task = state.active_task
-        # 判断当前是否有正在运行的flow
         if active_task is not None:
-            # 挂起旧任务
+            # 挂起旧任务,启动新任务
             state.interrupt_active_task()
-
-            # 启动新任务
             state.start_task(
                 TaskContext(flow_id=target_flow.id, step_id=target_flow.start_step().id)
             )
-
-            # 启动系统任务
+            # 启动系统任务:通知用户旧任务被中断、新任务开始
             state.start_system_task(
                 InterruptedSystemContext(
                     flow_id="system_task_interrupted",
@@ -68,28 +66,25 @@ class CommandProcessor:
                     interrupted_flow_id=active_task.flow_id,
                     interrupted_flow_name=flows.get_flow_by_id(
                         active_task.flow_id
-                    ).name,
+                    ).name
+                    or "",
                     started_flow_id=target_flow.id,
-                    started_flow_name=target_flow.name,
+                    started_flow_name=target_flow.name or "",
                 )
             )
-
-            # 通知用户新任务已启动
-            state.add_message("system", "new_task_started")
-            return
         else:
             state.start_task(
-                TaskContext(
-                    flow_name=target_flow.name, step_id=target_flow.start_step().id
-                )
+                TaskContext(flow_id=target_flow.id, step_id=target_flow.start_step().id)
             )
-
+            # 启动系统任务:通知用户新任务已开始
             state.start_system_task(
                 StartedSystemContext(
                     flow_id="system_task_started",
-                    step_id=flows.get_flow_by_id("system_task_started").start_step().id,
+                    step_id=flows.get_flow_by_id("system_task_started")
+                    .start_step()
+                    .id,
                     started_flow_id=target_flow.id,
-                    started_flow_name=target_flow.name,
+                    started_flow_name=target_flow.name or "",
                 )
             )
 
@@ -99,6 +94,8 @@ class CommandProcessor:
 
     def _handle_cancel_flow(self, state: DialogueState, flows: FlowsList):
         active_task = state.active_task
+        if active_task is None:
+            return
         target_flow = flows.get_flow_by_id(active_task.flow_id)
 
         # 取消当前task
@@ -108,11 +105,11 @@ class CommandProcessor:
         state.start_system_task(
             CanceledSystemContext(
                 flow_id="system_task_canceled",
-                step_id=flows.get_flow_by_id(flow_id="system_task_canceled")
+                step_id=flows.get_flow_by_id("system_task_canceled")
                 .start_step()
                 .id,
-                canceled_flow_id=target_flow.id,
-                canceled_flow_name=target_flow.name,
+                canceled_flow_id=target_flow.id if target_flow else "",
+                canceled_flow_name=target_flow.name if target_flow else "",
             )
         )
 
@@ -143,21 +140,23 @@ class CommandProcessor:
                     interrupted_flow_id=active_task.flow_id,
                     interrupted_flow_name=flows.get_flow_by_id(
                         active_task.flow_id
-                    ).name,
+                    ).name
+                    or "",
                     started_flow_id=target_flow.id,
-                    started_flow_name=target_flow.name,
+                    started_flow_name=target_flow.name or "",
                 )
             )
-
         else:
             # 恢复目标任务
-            state.resume_task(task_context=target_flow.id)
+            state.resume_task(target_flow.id)
             # 启动system_task_resumed
             state.start_system_task(
                 ResumedSystemContext(
                     flow_id="system_task_resumed",
-                    step_id=flows.get_flow_by_id("system_task_resumed").start_step().id,
+                    step_id=flows.get_flow_by_id("system_task_resumed")
+                    .start_step()
+                    .id,
                     resumed_flow_id=target_flow.id,
-                    resumed_flow_name=target_flow.name,
+                    resumed_flow_name=target_flow.name or "",
                 )
             )

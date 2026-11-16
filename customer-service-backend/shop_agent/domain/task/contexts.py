@@ -60,7 +60,8 @@ class ResumedSystemContext(SystemContext):
 
 @dataclass(slots=True)
 class CollectSystemContext(SystemContext):
-    pass
+    slot_name: str = ""
+    response: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -74,11 +75,11 @@ class CompletedSystemContext(SystemContext):
 
 
 FLOW_ID_TO_CONTEXT_CLASS: dict[str, type] = {
-    "started": StartedSystemContext,
-    "interrupted": InterruptedSystemContext,
-    "collect": CollectSystemContext,
-    "resumed": ResumedSystemContext,
-    "canceled": CanceledSystemContext,
-    "cannot_handle": CannotHandleSystemContext,
-    "completed": CompletedSystemContext,
+    "system_task_started": StartedSystemContext,
+    "system_task_interrupted": InterruptedSystemContext,
+    "system_task_canceled": CanceledSystemContext,
+    "system_task_resumed": ResumedSystemContext,
+    "system_collect_information": CollectSystemContext,
+    "system_cannot_handle": CannotHandleSystemContext,
+    "system_completed": CompletedSystemContext,
 }

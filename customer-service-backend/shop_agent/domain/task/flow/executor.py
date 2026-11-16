@@ -18,6 +18,7 @@ from shop_agent.domain.task.flow.steps import (
     CollectSlotStep,
     EndFlowStep,
     FlowStep,
+    SetSlotsFlowStep,
     StartFlowStep,
 )
 
@@ -30,15 +31,14 @@ class FlowExecutor:
     ) -> list[BotMessage]:
         messages: list[BotMessage] = []
         while True:
-            action_call: ActionCall = self.advance_until_action(state)
+            action_call: ActionCall = self.advance_until_action(state, flows)
             if action_call.action_name == "action_listen":
                 break
-            else:
-                action_result: ActionResult = await action_runner.run(
-                    action_call, state
-                )
-                state.set_slots(action_result.slot_updates)
-                messages.extend(action_result.messages)
+            action_result: ActionResult = await action_runner.run(
+                action_call, state
+            )
+            state.set_slots(action_result.slot_updates)
+            messages.extend(action_result.messages)
         return messages
 
     def advance_until_action(
@@ -50,8 +50,15 @@ class FlowExecutor:
                 return LISTEN
 
             flow: Flow = flows.get_flow_by_id(current_task.flow_id)
-            step: FlowStep = flow.get_step_by_id(current_task.step_id)
-            step_result: ActionCall | None = self._run_step(step, state)
+            if flow is None:
+                state.end_active_task()
+                return LISTEN
+            step: FlowStep | None = flow.get_step_by_id(current_task.step_id)
+            if step is None:
+                state.end_active_task()
+                return LISTEN
+
+            step_result: ActionCall | None = self._run_step(step, state, flows)
 
             if step_result is not None:
                 return step_result
@@ -61,19 +68,32 @@ class FlowExecutor:
     ) -> ActionCall | None:
         """运行流程步骤"""
         if isinstance(step, StartFlowStep):
-            self._run_start_step(step, state)
-        if isinstance(step, CollectSlotStep):
-            self._run_collect_step(step, state, flows)
-        if isinstance(step, ActionFlowStep):
-            self._run_action_step(step, state)
+            return self._run_start_step(step, state)
         if isinstance(step, EndFlowStep):
-            self._run_end_step(state)
+            return self._run_end_step(state)
+        if isinstance(step, CollectSlotStep):
+            return self._run_collect_step(step, state, flows)
+        if isinstance(step, ActionFlowStep):
+            return self._run_action_step(step, state)
+        if isinstance(step, SetSlotsFlowStep):
+            return self._run_set_slots_step(step, state)
+        return None
+
+    def _run_set_slots_step(
+        self, step: SetSlotsFlowStep, state: DialogueState
+    ) -> ActionCall | None:
+        """运行槽位设置步骤:把静态值写入当前任务后继续推进。"""
+        for slot_item in step.slots:
+            state.set_slots(slots=slot_item)
+        self._advance_to_next_step(step, state)
+        return None
 
     def _run_start_step(
         self, step: StartFlowStep, state: DialogueState
     ) -> ActionCall | None:
         """运行开始步骤"""
         self._advance_to_next_step(step, state)
+        return None
 
     def _run_collect_step(
         self, step: CollectSlotStep, state: DialogueState, flows: FlowsList
@@ -133,11 +153,10 @@ class FlowExecutor:
         if state.active_system_task:
             state.end_system_task()
             return None
-        else:
-            state.end_active_task()
-            return None
+        state.end_active_task()
+        return None
 
-    def _select_next_step(self, step: FlowStep, state: DialogueState) -> FlowStep:
+    def _select_next_step(self, step: FlowStep, state: DialogueState) -> str | None:
         """
         选择下一个step_id
         :param step:
@@ -154,6 +173,7 @@ class FlowExecutor:
                 return link.target
             if isinstance(link, FallbackLink):
                 return link.target
+        return None
 
     def _eval_condition(self, condition: str, state: DialogueState) -> bool:
         data = {
