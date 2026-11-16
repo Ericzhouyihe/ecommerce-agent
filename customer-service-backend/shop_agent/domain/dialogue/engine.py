@@ -1,8 +1,7 @@
 import time
 import uuid
 
-from shop_agent.domain.dialogue.handlers.chitchat_handler import handle_chitchat
-from shop_agent.domain.task.handler import handle_task
+from shop_agent.domain.chitchat.handler import handle_chitchat
 from shop_agent.domain.dialogue.messages import (
     BotMessage,
     MessageType,
@@ -13,6 +12,7 @@ from shop_agent.domain.dialogue.planner.turn_plan_validator import validate_turn
 from shop_agent.domain.dialogue.planner.turn_planner import TurnKind, plan_turn
 from shop_agent.domain.dialogue.sessions import Session, Turn
 from shop_agent.domain.dialogue.state import DialogueState
+from shop_agent.domain.task.handler import handle_task
 
 SESSION_TIMEOUT_SECONDS = 60 * 30
 

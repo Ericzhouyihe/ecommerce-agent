@@ -60,22 +60,19 @@ class DialogueState:
     def start_system_task(self, system_context: SystemContext):
         """
         启动系统任务
-        :param system_context:
-        :return:
+        :param system_context: 系统任务上下文
         """
         self.active_system_task = system_context
 
     def end_system_task(self):
         """
         关闭当前的系统任务
-        :return:
         """
         self.active_system_task = None
 
     def interrupt_active_task(self):
         """
         中断当前任务
-        :return:
         """
         self.paused_tasks.append(self.active_task)
         self.active_task = None
@@ -83,23 +80,20 @@ class DialogueState:
     def start_task(self, task_context: TaskContext):
         """
         启动任务
-        :param task_context:
-        :return:
+        :param task_context: 任务上下文
         """
         self.active_task = task_context
 
     def set_slots(self, slots: dict[str, Any]):
         """
         更新slots
-        :param slots:
-        :return:
+        :param slots: 要更新的slots
         """
         self.active_task.slots.update(slots)
 
     def cancel_active_task(self):
         """
         取消当前任务
-        :return:
         """
         self.active_task = None
         self.active_system_task = None
@@ -107,8 +101,7 @@ class DialogueState:
     def resume_task(self, flow_id: str):
         """
         恢复任务
-        :param flow_id:
-        :return:
+        :param flow_id: 任务所属flow的id
         """
         for task in self.paused_tasks:
             if task.flow_id == flow_id:
@@ -130,3 +123,9 @@ class DialogueState:
         获取当前任务
         """
         return self.active_system_task or self.active_task
+
+    def end_active_task(self):
+        """
+        关闭当前任务
+        """
+        self.active_task = None

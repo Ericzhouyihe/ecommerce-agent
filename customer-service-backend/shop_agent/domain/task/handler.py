@@ -23,7 +23,7 @@ class TaskHandler:
     async def handle(
         self, commands: list[Command], state: DialogueState
     ) -> list[BotMessage]:
-        self.command_processor.apply(commands, state, self.flows)
+        self.command_processor.run(commands, state, self.flows)
         messages: list[BotMessage] = await self.flow_executor.run_task(
             state, self.flows, self.action_runner
         )
