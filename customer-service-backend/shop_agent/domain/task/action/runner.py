@@ -1,15 +1,7 @@
-from dataclasses import dataclass, field
-from typing import Any
-
 from shop_agent.domain.dialogue.state import DialogueState
 from shop_agent.domain.task.action.base import ActionResult
+from shop_agent.domain.task.action.call import ActionCall
 from shop_agent.domain.task.action.registry import ActionRegistry
-
-
-@dataclass
-class ActionCall:
-    action_name: str
-    action_kwargs: dict[str, Any] = field(default_factory=dict)
 
 
 class ActionRunner:

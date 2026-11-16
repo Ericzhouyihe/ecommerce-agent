@@ -124,3 +124,9 @@ class DialogueState:
             if session.session_id == self.current_session_id:
                 return session
         return None
+
+    def current_task(self) -> TaskContext | None:
+        """
+        获取当前任务
+        """
+        return self.active_system_task or self.active_task

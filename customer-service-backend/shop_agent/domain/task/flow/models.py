@@ -23,7 +23,7 @@ class Flow:
     def readable_name(self) -> str:
         return self.name or self.id
 
-    def step_by_id(self, step_id: str | None) -> FlowStep | None:
+    def get_step_by_id(self, step_id: str | None) -> FlowStep | None:
         if step_id is None:
             return None
         for step in self.steps:
