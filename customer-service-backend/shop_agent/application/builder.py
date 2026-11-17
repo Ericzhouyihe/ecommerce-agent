@@ -1,5 +1,3 @@
-"""组合根:装配完整的对话引擎(领域对象 + 领域服务,不感知 HTTP/DB 细节)。"""
-
 from pathlib import Path
 
 from shop_agent.domain.chitchat.handler import ChitchatHandler
@@ -23,6 +21,8 @@ from shop_agent.domain.task.command.processor import CommandProcessor
 from shop_agent.domain.task.flow.executor import FlowExecutor
 from shop_agent.domain.task.flow.loader import FlowLoader
 from shop_agent.domain.task.handler import TaskHandler
+
+"""组合根:装配完整的对话引擎(领域对象 + 领域服务,不感知 HTTP/DB 细节)。"""
 
 _PROJECT_ROOT = Path(__file__).parents[2]
 _FLOW_CONFIG_DIR = _PROJECT_ROOT / "flow_config"
