@@ -55,6 +55,12 @@ class ClarifyResponder:
         if reason is ClarifyReason.MISSING_TASK_COMMANDS:
             return "你这次是想办理什么业务呢？比如查订单、查物流，或者申请退款。"
 
+        if reason is ClarifyReason.INVALID_TASK_TARGET:
+            return "这个业务我这边暂时办不了，你可以试试查订单状态、查物流，或者申请退款。"
+
+        if reason is ClarifyReason.NO_ACTIVE_TASK:
+            return "现在我们还没有正在进行的事情，你想先办哪一件呢？比如查订单、查物流，或者申请退款。"
+
         if reason is ClarifyReason.OBJECT_REQUIRES_INTENT:
             focused_object = state.focused_object
             if focused_object is not None and focused_object.type == "order":

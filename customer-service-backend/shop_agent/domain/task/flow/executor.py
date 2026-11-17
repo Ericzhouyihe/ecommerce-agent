@@ -51,11 +51,11 @@ class FlowExecutor:
 
             flow: Flow = flows.get_flow_by_id(current_task.flow_id)
             if flow is None:
-                state.end_active_task()
+                self._end_current_task(state)
                 return LISTEN
             step: FlowStep | None = flow.get_step_by_id(current_task.step_id)
             if step is None:
-                state.end_active_task()
+                self._end_current_task(state)
                 return LISTEN
 
             step_result: ActionCall | None = self._run_step(step, state, flows)
@@ -150,11 +150,16 @@ class FlowExecutor:
 
     def _run_end_step(self, state: DialogueState) -> ActionCall | None:
         """运行结束步骤"""
-        if state.active_system_task:
-            state.end_system_task()
-            return None
-        state.end_active_task()
+        self._end_current_task(state)
         return None
+
+    @staticmethod
+    def _end_current_task(state: DialogueState) -> None:
+        """结束当前任务(系统任务优先),避免残缺 flow/step 卡住后续轮次"""
+        if state.active_system_task is not None:
+            state.end_system_task()
+        else:
+            state.end_active_task()
 
     def _select_next_step(self, step: FlowStep, state: DialogueState) -> str | None:
         """
@@ -177,7 +182,8 @@ class FlowExecutor:
 
     def _eval_condition(self, condition: str, state: DialogueState) -> bool:
         data = {
-            "slots": state.active_task.slots,
+            # 系统任务运行期间 active_task 可能为 None,条件里仍允许读 slots
+            "slots": state.active_task.slots if state.active_task else {},
             "context": asdict(state.current_task()),
         }
         return bool(eval(condition, {}, data))

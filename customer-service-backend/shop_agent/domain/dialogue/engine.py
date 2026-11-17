@@ -1,5 +1,4 @@
 import time
-import uuid
 
 from shop_agent.domain.chitchat.handler import ChitchatHandler
 from shop_agent.domain.clarify.responder import ClarifyResponder
@@ -57,6 +56,7 @@ class DialogueEngine:
                 message=user_message, state=state
             )
 
+        state.pending_turn.bot_messages.extend(messages)
         state.commit_pending_turn()
         return ProcessResult(
             sender_id=user_message.sender_id,
@@ -91,6 +91,7 @@ class DialogueEngine:
             turn_plan,
             state=state,
             knowledge_intents=self.knowledge_handler.knowledge_intents,
+            flows=self.task_handler.flows,
         )
         if not validation.valid:
             return await self.clarify_responder.respond(
@@ -128,6 +129,8 @@ class DialogueEngine:
         self, message: UserMessage, state: DialogueState, flows: FlowsList
     ) -> Command | None:
         message_object = message.object
+        if message_object is None:
+            return None
         object_type = message_object.type.strip().lower()
         collect_slot_name = self._current_collect_slot_name(state=state, flows=flows)
 

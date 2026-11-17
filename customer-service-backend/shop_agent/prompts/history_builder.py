@@ -36,7 +36,9 @@ class HistoryBuilder:
         return text.strip()
 
     @staticmethod
-    def _render_object(object: MessageObject) -> str:
+    def _render_object(object: MessageObject | None) -> str:
+        if object is None:
+            return ""
         # [订单对象 id=A1001, title='手机', attr1=value1, attr2=value2, attr3=value3]
         label = "订单对象" if object.type == "order" else "商品对象"
         id = object.id

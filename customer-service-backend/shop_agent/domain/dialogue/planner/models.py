@@ -57,6 +57,8 @@ class ClarifyReason(str, Enum):
     MISSING_KNOWLEDGE_INTENT = "missing_knowledge_intent"  # knowledge 轨道没有 intents
     MISSING_FOCUSED_OBJECT = "missing_focused_object"  # 意图需要聚焦对象但用户没提供
     OBJECT_REQUIRES_INTENT = "object_requires_intent"  # 发了对象但没说要干什么
+    INVALID_TASK_TARGET = "invalid_task_target"  # 要启动/恢复的流程不存在或未挂起
+    NO_ACTIVE_TASK = "no_active_task"  # 没有进行中的任务却要取消/填槽
 
 
 @dataclass

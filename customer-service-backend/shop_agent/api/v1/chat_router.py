@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from shop_agent.api.dependencies import get_dialogue_service
 from shop_agent.api.v1.mappers import build_chat_response, build_user_message, build_history_response
-from shop_agent.api.v1.scheme import (
+from shop_agent.api.v1.schemas import (
     ChatRequest,
     ChatResponse,
     HistoryResponse,

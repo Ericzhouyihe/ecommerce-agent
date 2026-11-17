@@ -1,6 +1,6 @@
 import uuid
 
-from shop_agent.api.v1.scheme import (
+from shop_agent.api.v1.schemas import (
     ChatBotMessage,
     ChatObject,
     ChatRequest,

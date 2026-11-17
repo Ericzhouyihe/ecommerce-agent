@@ -1,6 +1,6 @@
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ChatObject(BaseModel):
@@ -15,6 +15,13 @@ class ChatRequest(BaseModel):
     message_id: str | None = None
     text: str | None = None
     object: ChatObject | None = None
+
+    @model_validator(mode="after")
+    def _require_text_or_object(self) -> "ChatRequest":
+        has_text = bool((self.text or "").strip())
+        if not has_text and self.object is None:
+            raise ValueError("text 与 object 至少需要提供一个")
+        return self
 
 
 class ChatBotMessage(BaseModel):

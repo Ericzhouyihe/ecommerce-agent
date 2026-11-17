@@ -23,24 +23,26 @@
 
 ## 启动方式
 
-推荐直接使用 Docker Compose：
+1. 在仓库根目录启动 MySQL(会自动建库、建表并写入演示数据):
 
 ```powershell
-cd atguigu_ecommerce_service
-docker compose up --build
+docker compose up -d mysql
 ```
 
-如果你之前已经启动过 MySQL 容器，并且数据库里已经写入了乱码数据，需要先清掉旧卷再重新初始化：
+2. 启动本服务(默认监听 `127.0.0.1:18081`):
+
+```powershell
+cd ecommerce-service-backend
+uv sync
+uv run python main.py
+```
+
+如果你想清空数据重新初始化:
 
 ```powershell
 docker compose down -v
-docker compose up --build
+docker compose up -d mysql
 ```
-
-启动后默认地址：
-
-- API: `http://127.0.0.1:18081`
-- OpenAPI: `http://127.0.0.1:18081/docs`
 
 ## 核心接口
 
@@ -54,14 +56,6 @@ docker compose up --build
 - `POST /orders/{order_id}/shipping-reminders`
 - `POST /orders/{order_id}/refund-applications`
 
-## 本地开发
+## 环境变量
 
-如果你本地装了 Python 和 MySQL，也可以自己跑：
-
-```powershell
-cd atguigu_ecommerce_service
-uv sync
-uv run uvicorn app.main:app --reload --port 18081
-```
-
-环境变量见 `.env.example`。
+见 `.env.example`。服务启动时会自动加载项目根目录的 `.env`(已存在的环境变量优先)。

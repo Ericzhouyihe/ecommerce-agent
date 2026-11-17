@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 
 [[package]]
@@ -355,6 +355,7 @@ dependencies = [
     { name = "langchain" },
     { name = "langchain-openai" },
     { name = "pydantic-settings" },
+    { name = "pyyaml" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "uvicorn" },
 ]
@@ -369,6 +370,7 @@ requires-dist = [
     { name = "langchain", specifier = ">=1.4.3" },
     { name = "langchain-openai", specifier = ">=1.6.7" },
     { name = "pydantic-settings", specifier = ">=2.15.0" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.1.4" },
     { name = "uvicorn", specifier = ">=0.54.0" },
 ]

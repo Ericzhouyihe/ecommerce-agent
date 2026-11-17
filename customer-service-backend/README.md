@@ -54,11 +54,26 @@ CommandProcessor(状态迁移:启动/挂起/恢复/取消任务 + 系统通知�
 ## 本地运行
 
 ```bash
-# 1. 配置 .env(参考 conf/config.py 中的默认项:LLM / MySQL / 商城 API)
-# 2. 建表
-uv run python -m shop_agent.infrastructure.db.models.dialogue_state
-# 3. 启动(依赖本地商城 API,默认 http://127.0.0.1:18081)
+# 1. 启动 MySQL(docker/mysql/initdb 会自动建库建表并写入演示数据)
+docker compose up -d mysql
+
+# 2. 配置 .env(参考 .env.example)
+#    必填:LLM_API_KEY;数据库默认与 docker-compose.yml 一致
+cp .env.example .env
+
+# 3. 若需手动建表(仅创建缺失的表,不会改已有表结构)
+uv run python -m shop_agent.infrastructure.db.init_db
+
+# 4. 启动(依赖本地商城 API,默认 http://127.0.0.1:18081)
 uv run python main.py
 ```
 
 接口文档:`http://127.0.0.1:18082/docs`
+
+## 前端
+
+```bash
+cd ../customer-service-frontend
+npm ci
+npm run dev     # http://127.0.0.1:5173,已代理 /api 与 /commerce
+```

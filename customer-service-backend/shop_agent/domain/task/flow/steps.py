@@ -86,12 +86,12 @@ class CollectSlotStep(FlowStep):
         return cls(
             **cls.base_fields(step_data),
             slot_name=str(step_data.get("slot_name", "")),
-            response=ResponseDefinition(**(step_data.get("response") or {})),
+            response=ResponseDefinition.from_json(step_data.get("response") or {}),
             validation=(
                 SlotValidation(
-                    condition=step_data.get("validation").get("condition"),
-                    failure_response=ResponseDefinition(
-                        **(step_data.get("validation").get("failure_response") or {})
+                    condition=(step_data.get("validation") or {}).get("condition"),
+                    failure_response=ResponseDefinition.from_json(
+                        (step_data.get("validation") or {}).get("failure_response") or {}
                     ),
                 )
                 if "validation" in step_data

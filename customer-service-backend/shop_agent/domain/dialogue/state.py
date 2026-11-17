@@ -39,16 +39,18 @@ class DialogueState:
     @classmethod
     def from_dict(cls, data: dict) -> "DialogueState":
         """从持久化 JSON 重建;忽略未知键,兼容结构演进"""
+        active_task_data = data.get("active_task")
+        active_system_task_data = data.get("active_system_task")
         return cls(
             sender_id=data["sender_id"],
-            active_task=TaskContext.from_dict(data["active_task"])
-            if data["active_task"]
+            active_task=TaskContext.from_dict(active_task_data)
+            if active_task_data
             else None,
             paused_tasks=[
                 TaskContext.from_dict(task) for task in data.get("paused_tasks", [])
             ],
-            active_system_task=SystemContext.from_dict(data["active_system_task"])
-            if data.get("active_system_task")
+            active_system_task=SystemContext.from_dict(active_system_task_data)
+            if active_system_task_data
             else None,
             focused_object=MessageObject.from_dict(data.get("focused_object"))
             if data.get("focused_object")
