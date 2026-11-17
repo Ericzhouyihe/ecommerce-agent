@@ -44,7 +44,7 @@ class ProductAPIProvider(KnowledgeProvider):
             url = f"{settings.commerce_api_base_url}/products/{product_id}"
             response = await http_client.get_http_client().get(url)
             return response.json()["data"]
-        except Exception:
+        except asyncio.CancelledError:
             return None
 
 
