@@ -81,7 +81,7 @@ class OrderAPIProvider(KnowledgeProvider):
             url = f"{settings.commerce_api_base_url}/orders/{order_number}"
             response = await http_client.get_http_client().get(url)
             return response.json()["data"]
-        except Exception:
+        except asyncio.CancelledError:
             return None
 
     async def _fetch_logistics(self, order_number) -> dict[str, Any] | None:
@@ -89,7 +89,7 @@ class OrderAPIProvider(KnowledgeProvider):
             url = f"{settings.commerce_api_base_url}/orders/{order_number}/logistics"
             response = await http_client.get_http_client().get(url)
             return response.json().get("data", {})
-        except Exception:
+        except asyncio.CancelledError:
             return None
 
 

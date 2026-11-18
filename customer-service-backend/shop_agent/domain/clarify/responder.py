@@ -37,9 +37,7 @@ class ClarifyResponder:
         )
         return [BotMessage(text=rewritten)]
 
-    def build_clarify_message(
-        self, reason: ClarifyReason, state: DialogueState
-    ) -> str:
+    def build_clarify_message(self, reason: ClarifyReason, state: DialogueState) -> str:
         if reason is ClarifyReason.MULTIPLE_TRACKS:
             return "你这次同时提到了多个方向。我们先处理一个，你想先办业务还是先咨询信息呢？"
 
@@ -56,7 +54,9 @@ class ClarifyResponder:
             return "你这次是想办理什么业务呢？比如查订单、查物流，或者申请退款。"
 
         if reason is ClarifyReason.INVALID_TASK_TARGET:
-            return "这个业务我这边暂时办不了，你可以试试查订单状态、查物流，或者申请退款。"
+            return (
+                "这个业务我这边暂时办不了，你可以试试查订单状态、查物流，或者申请退款。"
+            )
 
         if reason is ClarifyReason.NO_ACTIVE_TASK:
             return "现在我们还没有正在进行的事情，你想先办哪一件呢？比如查订单、查物流，或者申请退款。"
