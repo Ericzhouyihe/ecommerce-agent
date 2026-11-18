@@ -34,36 +34,16 @@ class Settings(BaseSettings):
     # =========================
     # MySQL
     # =========================
-    database_url: str = (
-        "mysql+aiomysql://zhouyihe:zhouyihe.123@127.0.0.1:3306/customer_service?charset=utf8mb4"
-    )
+    database_url: str = "mysql+aiomysql://zhouyihe:zhouyihe.123@127.0.0.1:3306/customer_service?charset=utf8mb4"
 
     # =========================
     # 商城 API
     # =========================
     commerce_api_base_url: str = "http://127.0.0.1:18081"
 
-    # =========================
-    # Redis
-    # =========================
-    redis_url: str = "redis://localhost:6379"
-    redis_password: str = ""
-
-    # =========================
-    # Milvus
-    # =========================
-    milvus_uri: str = "http://127.0.0.1:19530"
-    milvus_token: str = ""
-
-    # =========================
-    # Embedding
-    # bge-m3 输出 1024 维，bge-small-zh-v1.5 输出 512 维
-    # =========================
-    embedding_name: str = "bge-small-zh-v1.5"
-    embedding_dim: int = 512
-
-
 settings = Settings()
 
 if __name__ == "__main__":
     print(settings.llm_api_key)
+    print(settings.llm_model)
+    print(settings.llm_base_url)
