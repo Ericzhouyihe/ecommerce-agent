@@ -6,22 +6,18 @@ from shop_agent.domain.task.action.base import Action
 from shop_agent.domain.task.action.builtin.action_listen import ActionListen
 from shop_agent.domain.task.action.builtin.action_response import ActionResponse
 from shop_agent.domain.task.action.registry import ActionRegistry
-from shop_agent.domain.task.action.runner import ActionRunner
+from shop_agent.domain.task.action.runner import ActionRunner, ActionCall
 
 
-def register_builtin_actions(action_runner: ActionRunner) -> None:
-    """注册内置操作"""
+def register_builtin_actions(action_runner: ActionRunner):
     action_runner.registry.register(ActionResponse())
     action_runner.registry.register(ActionListen())
 
 
-def register_custom_actions(action_runner: ActionRunner) -> None:
-    """注册自定义操作"""
+def register_custom_actions(action_runner: ActionRunner):
     package = importlib.import_module("shop_agent.domain.task.action.custom")
 
-    for _, module_name, is_pkg in pkgutil.iter_modules(
-        package.__path__, prefix=f"{package.__name__}."
-    ):
+    for _, module_name, is_pkg in pkgutil.iter_modules(package.__path__, prefix=f"{package.__name__}."):
         if is_pkg:
             continue
 
@@ -43,6 +39,6 @@ def build_action_runner() -> ActionRunner:
     return action_runner
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     action_runner = build_action_runner()
     print(action_runner)

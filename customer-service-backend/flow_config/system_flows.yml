@@ -174,18 +174,7 @@ flows:
         action: action_response
         args:
           mode: static
-          text: "好的，我们先把{{ context.interrupted_flow_name }}放一放。"
-        next:
-          - if: "context.get('started_flow_name')"
-            then: announce_started
-          - else: end
-
-      - id: announce_started
-        type: action
-        action: action_response
-        args:
-          mode: static
-          text: "好的，我们先处理{{ context.started_flow_name }}。"
+          text: "好的，我们先把{{ context.interrupted_flow_name }}放一放，先处理{{ context.started_flow_name }}。"
         next: end
 
       - id: end

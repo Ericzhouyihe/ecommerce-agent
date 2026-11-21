@@ -1,11 +1,13 @@
+from typing import Dict
+
 from shop_agent.domain.task.action.base import Action
 
 
 class ActionRegistry:
-    """运行时操作的解析器。"""
+    """Resolver for runtime actions."""
 
     def __init__(self) -> None:
-        self._actions: dict[str, Action] = {}
+        self._actions: Dict[str, Action] = {}
 
     def register(self, action: Action) -> None:
         self._actions[action.name] = action

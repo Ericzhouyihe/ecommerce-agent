@@ -10,7 +10,6 @@ class MessageType(Enum):
 
 @dataclass
 class MessageObject:
-    # FocusedObject
     type: str
     id: str
     title: str | None = None
@@ -29,8 +28,8 @@ class MessageObject:
         return cls(
             type=data["type"],
             id=data["id"],
-            title=data.get("title"),
-            attributes=data.get("attributes", {}),
+            title=data["title"],
+            attributes=data["attributes"],
         )
 
 
@@ -38,7 +37,7 @@ class MessageObject:
 class UserMessage:
     sender_id: str
     message_id: str
-    type: MessageType = MessageType.TEXT
+    type: MessageType
     text: str | None = None
     object: MessageObject | None = None
 
@@ -57,8 +56,8 @@ class UserMessage:
             sender_id=data["sender_id"],
             message_id=data["message_id"],
             type=MessageType(data["type"]),
-            text=data.get("text"),
-            object=MessageObject.from_dict(data.get("object")) if data.get("object") else None,
+            text=data["text"],
+            object=MessageObject.from_dict(data["object"]) if data["object"] else None,
         )
 
 
@@ -76,8 +75,8 @@ class BotMessage:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "BotMessage":
         return cls(
-            text=data.get("text"),
-            object=MessageObject.from_dict(data.get("object")) if data.get("object") else None,
+            text=data["text"],
+            object=MessageObject.from_dict(data["object"]) if data["object"] else None,
         )
 
 

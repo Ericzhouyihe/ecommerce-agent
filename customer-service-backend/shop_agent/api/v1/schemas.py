@@ -1,13 +1,11 @@
-from typing import Any, Literal
-
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 
 
 class ChatObject(BaseModel):
     type: str
     id: str
     title: str | None = None
-    attributes: dict[str, Any] = Field(default_factory=dict)
+    attributes: dict = {}
 
 
 class ChatRequest(BaseModel):
@@ -15,13 +13,6 @@ class ChatRequest(BaseModel):
     message_id: str | None = None
     text: str | None = None
     object: ChatObject | None = None
-
-    @model_validator(mode="after")
-    def _require_text_or_object(self) -> "ChatRequest":
-        has_text = bool((self.text or "").strip())
-        if not has_text and self.object is None:
-            raise ValueError("text 与 object 至少需要提供一个")
-        return self
 
 
 class ChatBotMessage(BaseModel):
@@ -32,16 +23,15 @@ class ChatBotMessage(BaseModel):
 class ChatResponse(BaseModel):
     sender_id: str
     message_id: str
-    messages: list[ChatBotMessage] = Field(default_factory=list)
+    messages: list[ChatBotMessage]
 
 
-# """历史消息条目：用户和机器人的消息混在同一个列表里，靠 role 区分"""
 class HistoryMessage(BaseModel):
-    role: Literal["user", "bot"]
+    role: str # user or bot
     text: str | None = None
     object: ChatObject | None = None
 
 
 class HistoryResponse(BaseModel):
     sender_id: str
-    messages: list[HistoryMessage] = Field(default_factory=list)
+    messages: list[HistoryMessage]

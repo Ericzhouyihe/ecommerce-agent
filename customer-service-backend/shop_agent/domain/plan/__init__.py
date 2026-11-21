@@ -6,7 +6,7 @@ from .models import (
     TurnPlan,
     TurnPlanValidationResult,
 )
-from .turn_plan_validator import TurnPlanValidator
+from .validator import TurnPlanValidator
 from .turn_planner import TurnPlanner
 
 __all__ = [

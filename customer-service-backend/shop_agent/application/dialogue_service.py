@@ -1,35 +1,30 @@
 from shop_agent.domain.dialogue.engine import DialogueEngine
 from shop_agent.domain.dialogue.messages import ProcessResult, UserMessage
-from shop_agent.domain.dialogue.repository import DialogueStateRepository
 from shop_agent.domain.dialogue.state import DialogueState
+from shop_agent.infrastructure.repositories.dialogue_state import (
+    DialogueStateRepository,
+)
 
 
 class DialogueService:
-    """应用服务:串起"加载状态 -> 引擎处理 -> 保存状态"的事务边界。"""
-
     def __init__(
-        self, dialogue_state_repository: DialogueStateRepository, dialogue_engine: DialogueEngine
+        self,
+        dialogue_state_repository: DialogueStateRepository,
+        dialogue_engine: DialogueEngine,
     ):
         self.dialogue_state_repository = dialogue_state_repository
         self.dialogue_engine = dialogue_engine
 
     async def process_message(self, user_message: UserMessage) -> ProcessResult:
-        # 1. 通过 dialogue_state_repository 根据 sender_id 加载用户对话状态
-        dialogue_state: DialogueState = await self.dialogue_state_repository.load_state(
+        # 1.通过dialogue_state_repository根据sender_id 加载对话状态
+        state: DialogueState = await self.dialogue_state_repository.load_state(
             user_message.sender_id
         )
-
-        # 2. 调用 dialogue_engine 根据对话状态处理用户消息
+        # 2. 使用dialogue_engine根据对话状态去处理最新消息
         process_result: ProcessResult = await self.dialogue_engine.process_message(
-            dialogue_state, user_message
+            state, user_message
         )
-
-        # 3. 通过 dialogue_state_repository 保存最新的对话状态
-        await self.dialogue_state_repository.save_state(dialogue_state)
-
+        # 3. 通过dialogue_state_repository保存最新的对话状态
+        await self.dialogue_state_repository.save_state(state)
         # 4. 返回本轮处理结果
         return process_result
-
-    async def get_history(self, sender_id: str) -> DialogueState:
-        """读取该用户的完整对话状态(历史从中提取)。"""
-        return await self.dialogue_state_repository.load_state(sender_id)

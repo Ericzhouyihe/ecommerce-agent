@@ -7,19 +7,14 @@ from shop_agent.domain.knowledge.responder import KnowledgeResponder
 
 
 class KnowledgeHandler:
-    def __init__(
-        self,
-        knowledge_intents: dict[str, KnowledgeIntent],
-        provider_registry: KnowledgeProviderRegistry,
-        knowledge_responder: KnowledgeResponder,
-    ):
+    def __init__(self, knowledge_intents: dict[str, KnowledgeIntent],
+                 provider_registry: KnowledgeProviderRegistry,
+                 knowledge_responder: KnowledgeResponder):
         self.knowledge_intents = knowledge_intents
         self.provider_registry = provider_registry
         self.knowledge_responder = knowledge_responder
 
-    async def handle(
-        self, intents: list[str], state: DialogueState
-    ) -> list[BotMessage]:
+    async def handle(self, intents: list[str], state: DialogueState) -> list[BotMessage]:
         # 根据意图寻找知识来源
         provider_ids: list[str] = self._get_provider_ids_by_intents(intents)
 
@@ -34,7 +29,7 @@ class KnowledgeHandler:
         return await self.knowledge_responder.respond(
             user_message=state.pending_turn.user_message,
             recent_turns=state.current_session().turns,
-            chunks=chunks,
+            chunks=chunks
         )
 
     def _get_provider_ids_by_intents(self, intents: list[str]) -> list[str]:

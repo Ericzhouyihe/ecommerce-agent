@@ -1,10 +1,15 @@
+import asyncio
+
 from shop_agent.domain.chitchat.responder import ChitchatResponder
-from shop_agent.domain.dialogue.messages import BotMessage
-from shop_agent.domain.dialogue.state import DialogueState
+from shop_agent.domain.dialogue.messages import BotMessage, UserMessage, MessageType
+from shop_agent.domain.dialogue.state import DialogueState, Turn
 
 
 class ChitchatHandler:
-    def __init__(self, responder: ChitchatResponder) -> None:
+    def __init__(
+            self,
+            responder: ChitchatResponder
+    ) -> None:
         self.responder = responder
 
     async def handle(self, state: DialogueState) -> list[BotMessage]:
@@ -15,3 +20,6 @@ class ChitchatHandler:
             user_message=user_message,
             recent_turns=recent_turns,
         )
+
+
+

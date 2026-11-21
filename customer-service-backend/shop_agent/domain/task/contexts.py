@@ -1,11 +1,9 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Any
 
 
-@dataclass(slots=True)
+@dataclass
 class TaskContext:
-    """业务任务执行快照（对应用户发起的对话流程）。"""
-
     flow_id: str
     step_id: str | None = None
     slots: dict = field(default_factory=dict)
@@ -15,10 +13,12 @@ class TaskContext:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TaskContext":
-        return cls(flow_id=data["flow_id"], step_id=data["step_id"], slots=data["slots"])
+        return cls(
+            flow_id=data["flow_id"], step_id=data["step_id"], slots=data["slots"]
+        )
 
 
-@dataclass(slots=True)
+@dataclass
 class SystemContext:
     flow_id: str
     step_id: str | None = None
@@ -32,13 +32,13 @@ class SystemContext:
         return clz(**data)
 
 
-@dataclass(slots=True)
+@dataclass
 class StartedSystemContext(SystemContext):
     started_flow_id: str = ""
     started_flow_name: str = ""
 
 
-@dataclass(slots=True)
+@dataclass
 class InterruptedSystemContext(SystemContext):
     interrupted_flow_id: str = ""
     interrupted_flow_name: str = ""
@@ -52,34 +52,22 @@ class CanceledSystemContext(SystemContext):
     canceled_flow_name: str = ""
 
 
-@dataclass(slots=True)
+@dataclass
 class ResumedSystemContext(SystemContext):
     resumed_flow_id: str = ""
     resumed_flow_name: str = ""
 
 
-@dataclass(slots=True)
+@dataclass
 class CollectSystemContext(SystemContext):
     slot_name: str = ""
     response: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass(slots=True)
-class CannotHandleSystemContext(SystemContext):
-    pass
-
-
-@dataclass(slots=True)
-class CompletedSystemContext(SystemContext):
-    pass
-
-
-FLOW_ID_TO_CONTEXT_CLASS: dict[str, type] = {
+FLOW_ID_TO_CONTEXT_CLASS = {
     "system_task_started": StartedSystemContext,
     "system_task_interrupted": InterruptedSystemContext,
     "system_task_canceled": CanceledSystemContext,
     "system_task_resumed": ResumedSystemContext,
-    "system_collect_information": CollectSystemContext,
-    "system_cannot_handle": CannotHandleSystemContext,
-    "system_completed": CompletedSystemContext,
+    "system_collect_information": CollectSystemContext
 }

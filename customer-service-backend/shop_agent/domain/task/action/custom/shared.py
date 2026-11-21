@@ -2,7 +2,7 @@ from typing import Any
 from urllib.parse import quote
 
 from shop_agent.conf.config import settings
-from shop_agent.infrastructure.http_client import get_http_client
+from shop_agent.infrastructure.http_client import http_client
 
 
 def _base_url() -> str:
@@ -16,7 +16,7 @@ def _extract_data(result: dict | None) -> dict | None:
 
 async def fetch_order(order_id: str) -> dict | None:
     try:
-        r = await get_http_client().get(f"{_base_url()}/orders/{quote(order_id)}")
+        r = await http_client.get(f"{_base_url()}/orders/{quote(order_id)}")
         return _extract_data(r.json())
     except Exception:
         return None
@@ -24,9 +24,7 @@ async def fetch_order(order_id: str) -> dict | None:
 
 async def fetch_logistics(order_id: str) -> dict | None:
     try:
-        r = await get_http_client().get(
-            f"{_base_url()}/orders/{quote(order_id)}/logistics"
-        )
+        r = await http_client.get(f"{_base_url()}/orders/{quote(order_id)}/logistics")
         return _extract_data(r.json())
     except Exception:
         return None
@@ -34,7 +32,7 @@ async def fetch_logistics(order_id: str) -> dict | None:
 
 async def fetch_product(product_id: str) -> dict | None:
     try:
-        r = await get_http_client().get(f"{_base_url()}/products/{quote(product_id)}")
+        r = await http_client.get(f"{_base_url()}/products/{quote(product_id)}")
         return _extract_data(r.json())
     except Exception:
         return None
@@ -46,11 +44,7 @@ def _build_order_summary(payload: dict[str, Any]) -> str:
         parts.append(f"订单金额 ¥{payload['amount']}")
     items = payload.get("items") or []
     if items:
-        titles = [
-            str(item.get("title_snapshot") or "").strip()
-            for item in items[:2]
-            if item.get("title_snapshot")
-        ]
+        titles = [str(item.get("title_snapshot") or "").strip() for item in items[:2] if item.get("title_snapshot")]
         if titles:
             parts.append("商品：" + "、".join(titles))
     return "。".join(parts) + "。" if parts else ""

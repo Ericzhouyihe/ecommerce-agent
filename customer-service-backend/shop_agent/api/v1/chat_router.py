@@ -1,41 +1,66 @@
-from typing import Annotated
+import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
+from fastapi.params import Depends
 
 from shop_agent.api.dependencies import get_dialogue_service
-from shop_agent.api.v1.mappers import (
-    build_chat_response,
-    build_history_response,
-    build_user_message,
-)
-from shop_agent.api.v1.schemas import (
-    ChatRequest,
-    ChatResponse,
-    HistoryResponse,
-)
+from shop_agent.api.v1.schemas import ChatRequest, ChatResponse, HistoryResponse, ChatBotMessage, HistoryMessage, ChatObject
+from shop_agent.domain.dialogue.messages import UserMessage, ProcessResult, MessageType, MessageObject
 from shop_agent.application.dialogue_service import DialogueService
-from shop_agent.domain.dialogue.messages import ProcessResult
 
-router = APIRouter(prefix="/chat", tags=["智能客服"])
+chat_router = APIRouter()
 
 
-@router.post("", summary="发送消息并获取回复")
+@chat_router.post('/api/chat')
 async def chat(
-    message: ChatRequest,
-    dialogue_service: Annotated[DialogueService, Depends(get_dialogue_service)],
+        chat_request: ChatRequest,
+        dialogue_service: DialogueService = Depends(get_dialogue_service)
 ) -> ChatResponse:
+    process_result: ProcessResult = await dialogue_service.process_message(_build_user_message(chat_request))
+    return _build_chat_response(process_result)
 
-    process_result: ProcessResult = await dialogue_service.process_message(
-        build_user_message(message)
+
+@chat_router.get('/api/chat/history')
+async def history(sender_id: str) -> HistoryResponse:
+    return HistoryResponse(
+        sender_id=sender_id,
+        messages=[
+            HistoryMessage(
+                role='user',
+                text='你好'
+            ),
+            HistoryMessage(
+                role='bot',
+                text='我不好'
+            )
+        ]
     )
 
-    return build_chat_response(process_result)
+
+def _build_user_message(chat_request: ChatRequest) -> UserMessage:
+    return UserMessage(
+        sender_id=chat_request.sender_id,
+        message_id=chat_request.message_id or str(uuid.uuid4()),
+        type=MessageType.TEXT if chat_request.text else MessageType.OBJECT,
+        text=chat_request.text,
+        object=MessageObject(type=chat_request.object.type,
+                             id=chat_request.object.id,
+                             title=chat_request.object.title,
+                             attributes=chat_request.object.attributes
+                             ) if chat_request.object else None
+    )
 
 
-@router.get("/history", summary="获取聊天历史")
-async def chat_history(
-    sender_id: str,
-    service: Annotated[DialogueService, Depends(get_dialogue_service)],
-) -> HistoryResponse:
-    state = await service.get_history(sender_id)
-    return build_history_response(sender_id, state)
+def _build_chat_response(process_result: ProcessResult) -> ChatResponse:
+    return ChatResponse(
+        sender_id=process_result.sender_id,
+        message_id=process_result.message_id,
+        messages=[ChatBotMessage(
+            text=message.text,
+            object=ChatObject(type=message.object.type,
+                              id=message.object.id,
+                              title=message.object.title,
+                              attributes=message.object.attributes
+                              ) if message.object else None
+        ) for message in process_result.messages]
+    )

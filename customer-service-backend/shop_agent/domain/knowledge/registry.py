@@ -1,10 +1,5 @@
-from shop_agent.domain.knowledge.providers import (
-    FAQProvider,
-    KnowledgeProvider,
-    OrderAPIProvider,
-    ProductAPIProvider,
-    RAGProvider,
-)
+from shop_agent.domain.knowledge.providers import KnowledgeProvider, ProductAPIProvider, OrderAPIProvider, RAGProvider, \
+    FAQProvider
 
 
 class KnowledgeProviderRegistry:
@@ -15,7 +10,5 @@ class KnowledgeProviderRegistry:
         return self._providers_by_id[provider_id]
 
 
-if __name__ == "__main__":
-    registry = KnowledgeProviderRegistry(
-        [ProductAPIProvider(), OrderAPIProvider(), RAGProvider(), FAQProvider()]
-    )
+if __name__ == '__main__':
+    registry = KnowledgeProviderRegistry([ProductAPIProvider(), OrderAPIProvider(), RAGProvider(), FAQProvider()])
