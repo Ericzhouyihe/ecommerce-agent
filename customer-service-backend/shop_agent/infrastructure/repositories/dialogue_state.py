@@ -32,7 +32,6 @@ class DialogueStateRepository:
 
     async def save_state(self, state: DialogueState):
         # 将state序列化为一个json字符串
-        print(state.to_dict())
         state_json: str = json.dumps(state.to_dict())
         insert_stmt = insert(DialogueStateRecord).values(
             sender_id=state.sender_id, state_json=state_json
