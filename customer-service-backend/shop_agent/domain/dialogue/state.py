@@ -3,8 +3,8 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
-from shop_agent.domain.task.contexts import TaskContext, SystemContext
-from shop_agent.domain.dialogue.messages import UserMessage, BotMessage
+from shop_agent.domain.dialogue.messages import BotMessage, UserMessage
+from shop_agent.domain.task.contexts import SystemContext, TaskContext
 
 
 @dataclass
@@ -98,8 +98,12 @@ class DialogueState:
             "sender_id": self.sender_id,
             "active_task": self.active_task.to_dict() if self.active_task else None,
             "paused_tasks": [task.to_dict() for task in self.paused_tasks],
-            "active_system_task": self.active_system_task.to_dict() if self.active_system_task else None,
-            "focused_object": self.focused_object.to_dict() if self.focused_object else None,
+            "active_system_task": self.active_system_task.to_dict()
+            if self.active_system_task
+            else None,
+            "focused_object": self.focused_object.to_dict()
+            if self.focused_object
+            else None,
             "sessions": [session.to_dict() for session in self.sessions],
             "current_session_id": self.current_session_id,
             "pending_turn": self.pending_turn.to_dict() if self.pending_turn else None,
@@ -109,14 +113,21 @@ class DialogueState:
     def from_dict(cls, data: dict[str, Any]) -> "DialogueState":
         return cls(
             sender_id=data["sender_id"],
-            active_task=TaskContext.from_dict(data["active_task"]) if data["active_task"] else None,
+            active_task=TaskContext.from_dict(data["active_task"])
+            if data["active_task"]
+            else None,
             paused_tasks=[TaskContext.from_dict(task) for task in data["paused_tasks"]],
-            active_system_task=SystemContext.from_dict(data["active_system_task"]) if data[
-                "active_system_task"] else None,
-            focused_object=FocusedObject.from_dict(data["focused_object"]) if data["focused_object"] else None,
+            active_system_task=SystemContext.from_dict(data["active_system_task"])
+            if data["active_system_task"]
+            else None,
+            focused_object=FocusedObject.from_dict(data["focused_object"])
+            if data["focused_object"]
+            else None,
             sessions=[Session.from_dict(session) for session in data["sessions"]],
             current_session_id=data["current_session_id"],
-            pending_turn=Turn.from_dict(data["pending_turn"]) if data["pending_turn"] else None
+            pending_turn=Turn.from_dict(data["pending_turn"])
+            if data["pending_turn"]
+            else None,
         )
 
     def start_system_task(self, system_context: SystemContext):
@@ -186,9 +197,9 @@ class DialogueState:
 
     def start_session(self):
         now = time.time()
-        session = Session(session_id=str(uuid.uuid4()),
-                          started_at=now,
-                          last_activity_at=now)
+        session = Session(
+            session_id=str(uuid.uuid4()), started_at=now, last_activity_at=now
+        )
         self.sessions.append(session)
         self.current_session_id = session.session_id
 
@@ -204,9 +215,7 @@ class DialogueState:
 
     def begin_turn(self, message: UserMessage):
         self.pending_turn = Turn(
-            turn_id=str(uuid.uuid4()),
-            user_message=message,
-            bot_messages=[]
+            turn_id=str(uuid.uuid4()), user_message=message, bot_messages=[]
         )
 
     def commit_pending_turn(self):

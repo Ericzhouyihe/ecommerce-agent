@@ -2,29 +2,33 @@ import time
 
 from shop_agent.domain.chitchat.handler import ChitchatHandler
 from shop_agent.domain.clarify.responder import ClarifyResponder
-from shop_agent.domain.task.contexts import CollectSystemContext
-from shop_agent.domain.dialogue.messages import UserMessage, ProcessResult, MessageType, BotMessage
+from shop_agent.domain.dialogue.messages import (
+    BotMessage,
+    MessageType,
+    ProcessResult,
+    UserMessage,
+)
 from shop_agent.domain.dialogue.state import DialogueState, FocusedObject
 from shop_agent.domain.knowledge.handler import KnowledgeHandler
 from shop_agent.domain.plan.models import ClarifyReason
 from shop_agent.domain.plan.turn_planner import TurnPlanner
 from shop_agent.domain.plan.validator import TurnPlanValidator
 from shop_agent.domain.task.command.commands import Command, SetSlotsCommand
+from shop_agent.domain.task.contexts import CollectSystemContext
 from shop_agent.domain.task.flow.models import FlowsList
 from shop_agent.domain.task.flow.steps import CollectSlotStep
 from shop_agent.domain.task.handler import TaskHandler
 
 
 class DialogueEngine:
-
     def __init__(
-            self,
-            turn_planner: TurnPlanner,
-            task_handler: TaskHandler,
-            knowledge_handler: KnowledgeHandler,
-            chitchat_handler: ChitchatHandler,
-            clarify_responder: ClarifyResponder,
-            turn_plan_validator: TurnPlanValidator
+        self,
+        turn_planner: TurnPlanner,
+        task_handler: TaskHandler,
+        knowledge_handler: KnowledgeHandler,
+        chitchat_handler: ChitchatHandler,
+        clarify_responder: ClarifyResponder,
+        turn_plan_validator: TurnPlanValidator,
     ) -> None:
         self.turn_planner = turn_planner
         self.task_handler = task_handler
@@ -33,7 +37,9 @@ class DialogueEngine:
         self.clarify_responder = clarify_responder
         self.turn_plan_validator = turn_plan_validator
 
-    async def process_message(self, state: DialogueState, user_message: UserMessage) -> ProcessResult:
+    async def process_message(
+        self, state: DialogueState, user_message: UserMessage
+    ) -> ProcessResult:
         """处理一条消息，直接修改 state，返回本轮结果。"""
         self._prepare_session(state)
         self._begin_turn(state, user_message)
@@ -43,7 +49,9 @@ class DialogueEngine:
                 state=state,
             )
         else:
-            state.set_focused_object(FocusedObject.from_dict(user_message.object.to_dict()))
+            state.set_focused_object(
+                FocusedObject.from_dict(user_message.object.to_dict())
+            )
             messages = await self._handle_object_message(
                 message=user_message,
                 state=state,
@@ -76,19 +84,20 @@ class DialogueEngine:
         state.begin_turn(message)
 
     async def _handle_text_message(
-            self,
-            state: DialogueState,
+        self,
+        state: DialogueState,
     ) -> list[BotMessage]:
         turn_plan = await self.turn_planner.predict(
             state, self.task_handler.flows, self.knowledge_handler.knowledge_intents
         )
         validation = self.turn_plan_validator.validate(
-            turn_plan, state=state, knowledge_intents=self.knowledge_handler.knowledge_intents,
+            turn_plan,
+            state=state,
+            knowledge_intents=self.knowledge_handler.knowledge_intents,
         )
         if not validation.valid:
             return await self.clarify_responder.respond(
-                state=state,
-                reason=validation.reason
+                state=state, reason=validation.reason
             )
 
         if turn_plan.task is not None:
@@ -109,9 +118,9 @@ class DialogueEngine:
         return await self.chitchat_handler.handle(state=state)
 
     async def _handle_object_message(
-            self,
-            message: UserMessage,
-            state: DialogueState,
+        self,
+        message: UserMessage,
+        state: DialogueState,
     ) -> list[BotMessage]:
         command = self._object_slot_command(
             message=message,
@@ -127,10 +136,10 @@ class DialogueEngine:
         return await self.task_handler.handle(commands=[command], state=state)
 
     def _object_slot_command(
-            self,
-            message: UserMessage,
-            state: DialogueState,
-            flows: FlowsList,
+        self,
+        message: UserMessage,
+        state: DialogueState,
+        flows: FlowsList,
     ) -> Command | None:
         message_object = message.object
         object_type = message_object.type.strip().lower()
@@ -151,8 +160,8 @@ class DialogueEngine:
 
     @staticmethod
     def _current_collect_slot_name(
-            state: DialogueState,
-            flows: FlowsList,
+        state: DialogueState,
+        flows: FlowsList,
     ) -> str | None:
         if isinstance(state.active_system_task, CollectSystemContext):
             return state.active_system_task.slot_name or None
