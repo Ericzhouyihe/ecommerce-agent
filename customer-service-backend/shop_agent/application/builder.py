@@ -6,7 +6,12 @@ from shop_agent.domain.clarify.responder import ClarifyResponder
 from shop_agent.domain.dialogue.engine import DialogueEngine
 from shop_agent.domain.knowledge.handler import KnowledgeHandler
 from shop_agent.domain.knowledge.intents import KNOWLEDGE_INTENTS
-from shop_agent.domain.knowledge.providers import ProductAPIProvider, OrderAPIProvider, FAQProvider, RAGProvider
+from shop_agent.domain.knowledge.providers import (
+    FAQProvider,
+    OrderAPIProvider,
+    ProductAPIProvider,
+    RAGProvider,
+)
 from shop_agent.domain.knowledge.registry import KnowledgeProviderRegistry
 from shop_agent.domain.knowledge.responder import KnowledgeResponder
 from shop_agent.domain.plan.turn_planner import TurnPlanner
@@ -31,7 +36,7 @@ def build_dialogue_engine() -> DialogueEngine:
             flows=flows,
             command_processor=CommandProcessor(),
             flow_executor=FlowExecutor(),
-            action_runner=build_action_runner()
+            action_runner=build_action_runner(),
         ),
         knowledge_handler=KnowledgeHandler(
             knowledge_intents=KNOWLEDGE_INTENTS,
@@ -45,9 +50,7 @@ def build_dialogue_engine() -> DialogueEngine:
                 ]
             ),
         ),
-        chitchat_handler=ChitchatHandler(
-            responder=ChitchatResponder()
-        ),
+        chitchat_handler=ChitchatHandler(responder=ChitchatResponder()),
         clarify_responder=ClarifyResponder(),
-        turn_plan_validator=TurnPlanValidator()
+        turn_plan_validator=TurnPlanValidator(),
     )
